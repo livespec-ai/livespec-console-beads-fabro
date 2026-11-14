@@ -411,7 +411,16 @@ const WORKFLOW_TOML: &str = "workflow.toml";
 /// because the console builds Rust, and that one value is `workflow.toml`'s
 /// whole reason for being forked. Normalizing it on BOTH sides is what lets the
 /// fork be compared against the pinned release at all.
-const DOCKER_IMAGE_LINE_PREFIX: &str = r#"docker = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:"#;
+///
+/// Two registry owners are accepted while the fleet moves from the
+/// `thewoolleyman` account to the `livespec-ai` organization: a pinned
+/// orchestrator release names the old owner until it is re-released, while the
+/// fork names the new one. Both normalize to the same canonical line, so the
+/// owner change alone is never a divergence.
+const DOCKER_IMAGE_LINE_PREFIXES: [&str; 2] = [
+    r#"docker = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:"#,
+    r#"docker = "ghcr.io/livespec-ai/livespec-fabro-sandbox:"#,
+];
 /// The canonical form every sandbox-image line normalizes to.
 ///
 /// These BYTES are load-bearing and must not be tidied: the committed
@@ -449,7 +458,11 @@ fn normalize_workflow_docker_pin(bytes: &[u8]) -> Vec<u8> {
             .map_or((line, ""), |body| (body, "\n"));
         let body = body.strip_suffix('\r').unwrap_or(body);
         let carriage_return = if line.ends_with("\r\n") { "\r" } else { "" };
-        if body.starts_with(DOCKER_IMAGE_LINE_PREFIX) && body.ends_with('"') {
+        if DOCKER_IMAGE_LINE_PREFIXES
+            .iter()
+            .any(|prefix| body.starts_with(prefix))
+            && body.ends_with('"')
+        {
             normalized.push_str(NORMALIZED_DOCKER_IMAGE_LINE);
         } else {
             normalized.push_str(body);
@@ -876,6 +889,21 @@ mod tests {
         let upstream = b"steps = []\ndocker = \"ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-agent-v1.0.0\"\ncommit_timeout = \"10m\"\n";
         let fork = b"steps = []\ndocker = \"ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-agent-v1.126.0\"\ncommit_timeout = \"10m\"\n";
         let dir = scratch("workflow-image-clean");
+        let _ = std::fs::write(dir.join(WORKFLOW_TOML), fork);
+        let findings = verdict(
+            &[workflow_pin(&digest_for_pin(WORKFLOW_TOML, upstream))],
+            &dir,
+        );
+        assert_eq!(findings, vec![]);
+    }
+
+    /// The org move changes the registry owner on the fork side before the
+    /// pinned orchestrator release does. The owner alone is not a divergence.
+    #[test]
+    fn a_fork_image_line_under_the_livespec_ai_owner_normalizes_like_the_old_owner() {
+        let upstream = b"steps = []\ndocker = \"ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-agent-v1.0.0\"\ncommit_timeout = \"10m\"\n";
+        let fork = b"steps = []\ndocker = \"ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.209.0\"\ncommit_timeout = \"10m\"\n";
+        let dir = scratch("workflow-image-org-owner");
         let _ = std::fs::write(dir.join(WORKFLOW_TOML), fork);
         let findings = verdict(
             &[workflow_pin(&digest_for_pin(WORKFLOW_TOML, upstream))],

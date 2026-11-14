@@ -14,7 +14,7 @@ item's effective `admission_policy` route its lifecycle state -- an
 item is never filed directly into `ready` (approval IS the
 `pending-approval -> ready` transition; the orchestrator's ratified
 work-item state semantics govern -- repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`,
+`livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`, its Work-item state semantics section).
 
 ```mermaid

@@ -1,6 +1,6 @@
 ## ⛔ READ FIRST — never work around an upstream orchestrator dependency
 
-> ⛔ NEVER WORK AROUND AN UPSTREAM ORCHESTRATOR DEPENDENCY — never again in this plan. (Maintainer ruling 2026-09-02, binding on every item owned by epic livespec-console-beads-fabro-pzbdbo.) The console CONSUMES orchestrator primitives (charter D2); it never rebuilds, substitutes, hand-bridges, or writes a literal in place of one. When work hits a missing or broken orchestrator primitive: STOP. File the orchestrator item. Create the console proxy item (BLOCKED-ON livespec-orchestrator-beads-fabro/<id>) and make this item depends_on it so the dispatcher refuses to run it. Hand the maintainer the path as a comment on the epic — an ASK left in a backlog is NOT a handoff. A recorded deviation with no linked proxy is a defect. Console feature work is HELD until orchestrator b1–b3 land. Full postmortem and the mechanical rules: https://github.com/thewoolleyman/livespec-console-beads-fabro/blob/master/plan/retire-overseer-and-redesign-control-plane-around-console/research/never-work-around-upstream-dependencies.md
+> ⛔ NEVER WORK AROUND AN UPSTREAM ORCHESTRATOR DEPENDENCY — never again in this plan. (Maintainer ruling 2026-09-02, binding on every item owned by epic livespec-console-beads-fabro-pzbdbo.) The console CONSUMES orchestrator primitives (charter D2); it never rebuilds, substitutes, hand-bridges, or writes a literal in place of one. When work hits a missing or broken orchestrator primitive: STOP. File the orchestrator item. Create the console proxy item (BLOCKED-ON livespec-orchestrator-beads-fabro/<id>) and make this item depends_on it so the dispatcher refuses to run it. Hand the maintainer the path as a comment on the epic — an ASK left in a backlog is NOT a handoff. A recorded deviation with no linked proxy is a defect. Console feature work is HELD until orchestrator b1–b3 land. Full postmortem and the mechanical rules: https://github.com/livespec-ai/livespec-console-beads-fabro/blob/master/plan/retire-overseer-and-redesign-control-plane-around-console/research/never-work-around-upstream-dependencies.md
 
 ## Upstream-dependency proxies — the mechanical contract
 
@@ -259,7 +259,7 @@ commands, projections, TUI/GUI presentation, and human-attention routing.
       self-heal landing in orchestrator ≥ 0.4.0 (and how that qualifies the
       "Access denied ⇒ outside the wrapper" rule below).
     - The fleet's distributed SendMessage protocol
-      (https://github.com/thewoolleyman/livespec-dev-tooling/blob/master/%2Eai/distributed-sendmessage-protocol.md)
+      (https://github.com/livespec-ai/livespec-dev-tooling/blob/master/%2Eai/distributed-sendmessage-protocol.md)
       — read BEFORE messaging, asking, directing or answering another agent
       session on any host, and before running `herdr pane send-text`,
       `herdr pane run`, `herdr agent prompt` or `tmux send-keys` against a pane
@@ -333,15 +333,15 @@ and the selected orchestrator plugin:
 
 ```bash
 # livespec CORE (spec-side prose + wrappers; no skills of its own):
-codex plugin marketplace add thewoolleyman/livespec
+codex plugin marketplace add livespec-ai/livespec
 codex plugin add livespec@livespec
 
 # The Codex Driver (supplies the spec-side /livespec:* operation surface):
-codex plugin marketplace add thewoolleyman/livespec-driver-codex
+codex plugin marketplace add livespec-ai/livespec-driver-codex
 codex plugin add livespec@livespec-driver-codex
 
 # The selected orchestrator plugin (ships its own Codex skills):
-codex plugin marketplace add thewoolleyman/livespec-orchestrator-beads-fabro
+codex plugin marketplace add livespec-ai/livespec-orchestrator-beads-fabro
 codex plugin add livespec-orchestrator-beads-fabro@livespec-orchestrator-beads-fabro
 ```
 

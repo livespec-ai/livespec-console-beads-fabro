@@ -147,7 +147,7 @@ measurement.
 
 **Check the routing before any of this.** Every diagnosis in this family
 applies only while `vars.CI_RUNNER_LABELS` is set on the repo
-(`gh variable get CI_RUNNER_LABELS -R thewoolleyman/livespec-console-beads-fabro`).
+(`gh variable get CI_RUNNER_LABELS -R livespec-ai/livespec-console-beads-fabro`).
 When the variable is absent every gating job runs on GitHub-hosted
 `ubuntu-latest` and a queued job is GitHub's queue, not the pool's. The
 variable was deleted 2026-09-01 as the ratified availability fallback, with

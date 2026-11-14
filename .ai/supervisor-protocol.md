@@ -135,7 +135,7 @@ placeholder and `tail` rejects it.
 **Prefer `SendMessage` for a Claude worker (maintainer ruling 2026-11-14).**
 Send a Claude worker its instructions with `SendMessage` (across machines via
 Remote Control), per the fleet's distributed SendMessage protocol
-(https://github.com/thewoolleyman/livespec-dev-tooling/blob/master/%2Eai/distributed-sendmessage-protocol.md),
+(https://github.com/livespec-ai/livespec-dev-tooling/blob/master/%2Eai/distributed-sendmessage-protocol.md),
 because text typed into its pane can interrupt the maintainer. Typing into a
 pane is still allowed and nothing blocks it; use the typed-text idioms below
 when necessary (a slash command, a picker, a session `SendMessage` cannot

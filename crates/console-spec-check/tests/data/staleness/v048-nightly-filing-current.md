@@ -19,7 +19,7 @@ unranked.
 This clause deliberately asserts NO transition out of that state.
 Nothing in the ingress, in this specification, or in the orchestrator's
 ratified work-item state semantics (repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`,
+`livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`, its Work-item state semantics section)
 adopts a `ci-soak-finding` item into `backlog` or ranks it, and a
 placement obligation no actor performs would be a false requirement.

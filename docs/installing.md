@@ -9,14 +9,14 @@ Releases are published on the version schedule by release-please, and each
 release carries a linux `x86_64` binary plus its SHA-256 sum:
 
 ```bash
-gh release download --repo thewoolleyman/livespec-console-beads-fabro \
+gh release download --repo livespec-ai/livespec-console-beads-fabro \
   --pattern 'livespec-console-beads-fabro-*-x86_64-unknown-linux-gnu'
 ```
 
 Verify the checksum, then put the binary on your `PATH`:
 
 ```bash
-gh release download --repo thewoolleyman/livespec-console-beads-fabro \
+gh release download --repo livespec-ai/livespec-console-beads-fabro \
   --pattern 'livespec-console-beads-fabro-*-x86_64-unknown-linux-gnu.sha256'
 sha256sum -c livespec-console-beads-fabro-*-x86_64-unknown-linux-gnu.sha256
 
