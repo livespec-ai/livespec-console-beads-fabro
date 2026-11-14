@@ -55,7 +55,7 @@
 # Phase span failures are fail-hard on push, fail-soft when EXPORT_FAIL_SOFT=1.
 #
 # Required environment:
-#   REPO    - owner/name (e.g. thewoolleyman/livespec-console-beads-fabro)
+#   REPO    - owner/name (e.g. livespec-ai/livespec-console-beads-fabro)
 #   RUN_ID  - this workflow run's id (github.run_id)
 #   GH_TOKEN - gh auth token with actions:read (the workflow's GITHUB_TOKEN)
 #   HONEYCOMB_GITHUB_CI_INGEST_KEY_LIVESPEC - write-only Honeycomb ingest key

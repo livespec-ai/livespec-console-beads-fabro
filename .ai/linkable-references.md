@@ -21,7 +21,7 @@ a reference that does not get looked up.
   cite as a GitHub URL to the file — with the heading anchor or line
   numbers when they exist. "Scenario 30" becomes
   `[Scenario 30 — A needs-human terminal reaches the operator as a
-  ledger valve](https://github.com/thewoolleyman/livespec-console-beads-fabro/blob/master/SPECIFICATION/scenarios.md)`.
+  ledger valve](https://github.com/livespec-ai/livespec-console-beads-fabro/blob/master/SPECIFICATION/scenarios.md)`.
 - PRs, CI runs, releases: the GitHub URL, always.
 - Beads work-items are NOT web-linkable today. Until the beads web UI
   lands (planned in the dolt-server repo: `plan/beads-web-ui/`, see that

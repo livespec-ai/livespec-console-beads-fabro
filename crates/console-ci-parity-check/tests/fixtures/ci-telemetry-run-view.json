@@ -15,7 +15,7 @@
       "startedAt": "2026-09-02T10:00:00Z",
       "status": "completed",
       "steps": [],
-      "url": "https://github.com/thewoolleyman/livespec-console-beads-fabro/actions/runs/4242424242/job/1001"
+      "url": "https://github.com/livespec-ai/livespec-console-beads-fabro/actions/runs/4242424242/job/1001"
     },
     {
       "completedAt": "2026-09-02T10:11:00Z",
@@ -25,7 +25,7 @@
       "startedAt": "2026-09-02T10:00:00Z",
       "status": "completed",
       "steps": [],
-      "url": "https://github.com/thewoolleyman/livespec-console-beads-fabro/actions/runs/4242424242/job/1002"
+      "url": "https://github.com/livespec-ai/livespec-console-beads-fabro/actions/runs/4242424242/job/1002"
     }
   ],
   "startedAt": "2026-09-02T10:00:00Z",

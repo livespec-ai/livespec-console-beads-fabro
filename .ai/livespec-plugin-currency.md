@@ -69,7 +69,7 @@ thread. `drive --action impl:<id>` failed with dispatcher exit code 3:
 
 The Dispatcher has a **release-currency gate**
 (`commands/_dispatcher_staleness_gate.py`) that probes
-`git ls-remote https://github.com/thewoolleyman/livespec-orchestrator-beads-fabro.git
+`git ls-remote https://github.com/livespec-ai/livespec-orchestrator-beads-fabro.git
 refs/heads/release` and REFUSES admission when the executing build
 predates that SHA. It fires before anything about the work-item is
 considered, so the failure says nothing about the item.
@@ -322,7 +322,7 @@ message, which is why it is worth knowing they are different faults.
 If you want to know whether a refusal is coming before you spend a dispatch,
 probe what the gate probes:
 
-    git ls-remote https://github.com/thewoolleyman/livespec-orchestrator-beads-fabro.git refs/heads/release
+    git ls-remote https://github.com/livespec-ai/livespec-orchestrator-beads-fabro.git refs/heads/release
 
 and compare that SHA to the build you are about to execute. Cheap, and it
 distinguishes "my pin is stale" from "my session is stale" without burning a

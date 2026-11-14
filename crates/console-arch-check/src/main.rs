@@ -4014,7 +4014,7 @@ mod tests {
 
     #[test]
     fn fabro_image_rust_toolchain_match_is_allowed() -> std::io::Result<()> {
-        let image = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
+        let image = "ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
         let root =
             temp_fabro_toolchain_root("fabro-rust-match", "1.92.0", &["clippy", "rustfmt"], image)?;
         let findings = check_fabro_image_rust_toolchain_with_probe(&root, |probed_image| {
@@ -4028,7 +4028,7 @@ mod tests {
 
     #[test]
     fn fabro_image_rust_toolchain_mismatch_is_flagged() -> std::io::Result<()> {
-        let image = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
+        let image = "ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
         let root = temp_fabro_toolchain_root(
             "fabro-rust-mismatch",
             "1.92.0",
@@ -4047,7 +4047,7 @@ mod tests {
 
     #[test]
     fn unreadable_fabro_image_probe_is_flagged() -> std::io::Result<()> {
-        let image = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
+        let image = "ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
         let root = temp_fabro_toolchain_root(
             "fabro-rust-unreadable",
             "1.92.0",
@@ -4069,7 +4069,7 @@ mod tests {
 
     #[test]
     fn vacuous_fabro_image_probe_output_is_flagged() -> std::io::Result<()> {
-        let image = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
+        let image = "ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
         let root = temp_fabro_toolchain_root(
             "fabro-rust-vacuous",
             "1.92.0",
@@ -4088,7 +4088,7 @@ mod tests {
 
     #[test]
     fn missing_required_fabro_image_component_is_flagged() -> std::io::Result<()> {
-        let image = "ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
+        let image = "ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.31.1";
         let root = temp_fabro_toolchain_root(
             "fabro-rust-component",
             "1.92.0",
@@ -4181,7 +4181,7 @@ mod tests {
             "fabro-rust-wrong-image",
             "1.92.0",
             &["clippy", "rustfmt"],
-            "ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-agent-v1.31.1",
+            "ghcr.io/livespec-ai/livespec-fabro-sandbox:python-agent-v1.31.1",
         )?;
         let result = fabro_python_rust_image(&root);
         assert!(result.is_err(), "wrong image must fail");

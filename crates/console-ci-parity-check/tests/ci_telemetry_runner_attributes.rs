@@ -149,7 +149,7 @@ impl Harness {
             .arg(root.join(EXPORTER))
             .current_dir(&root)
             .env("PATH", path)
-            .env("REPO", "thewoolleyman/livespec-console-beads-fabro")
+            .env("REPO", "livespec-ai/livespec-console-beads-fabro")
             .env("RUN_ID", "4242424242")
             .env("HONEYCOMB_GITHUB_CI_INGEST_KEY_LIVESPEC", "test-ingest-key")
             .env("STUB_RUN_VIEW", &self.run_view)
