@@ -286,8 +286,11 @@ commands, projections, TUI/GUI presentation, and human-attention routing.
       — read BEFORE messaging, asking, directing or answering another agent
       session on any host, and before running `herdr pane send-text`,
       `herdr pane run`, `herdr agent prompt` or `tmux send-keys` against a pane
-      you did not create. Claude sessions talk through `SendMessage` (across
-      machines via Remote Control), never by typing into each other's panes
+      you did not create. Prefer `SendMessage` (across machines via Remote
+      Control) to message another Claude session, because text typed into
+      its pane can interrupt the maintainer. Typing into a pane is still
+      allowed and nothing blocks it; use it when necessary (a slash command,
+      a picker, a session `SendMessage` cannot reach, a Codex or pi seat)
       (maintainer ruling 2026-11-14).
     - [`.ai/linkable-references.md`](.ai/linkable-references.md)
       — every maintainer-facing reference must be web-linkable (GitHub

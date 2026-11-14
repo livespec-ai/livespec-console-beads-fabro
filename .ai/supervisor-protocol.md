@@ -132,15 +132,14 @@ tmux capture-pane -p -t "$WORKER_TARGET" -S -40
 pane. It is NOT "the last 40 lines." Do NOT pipe to `tail -N`; `-N` is a
 placeholder and `tail` rejects it.
 
-**A Claude worker is not driven by typing (superseded 2026-11-14).** Send a
-Claude worker its instructions with `SendMessage`, per the fleet's distributed
-SendMessage protocol (https://github.com/thewoolleyman/livespec-dev-tooling/blob/master/%2Eai/distributed-sendmessage-protocol.md).
-On a host with the managed policy, a hook denies literal-text `tmux send-keys`
-and `tmux paste-buffer` into ANY pane: tmux is a retired transport, and a Codex
-or pi worker, which cannot receive `SendMessage`, is reached through
-`herdr pane send-text` instead. The typed-text idioms below are historical.
-Key-only input (Escape, Enter, a picker digit) to unblock a picker or dialog
-stays allowed for any worker.
+**Prefer `SendMessage` for a Claude worker (maintainer ruling 2026-11-14).**
+Send a Claude worker its instructions with `SendMessage` (across machines via
+Remote Control), per the fleet's distributed SendMessage protocol
+(https://github.com/thewoolleyman/livespec-dev-tooling/blob/master/%2Eai/distributed-sendmessage-protocol.md),
+because text typed into its pane can interrupt the maintainer. Typing into a
+pane is still allowed and nothing blocks it; use the typed-text idioms below
+when necessary (a slash command, a picker, a session `SendMessage` cannot
+reach, a Codex or pi worker, which cannot receive `SendMessage`).
 
 Short instruction: send the text, VERIFY it landed, then send Enter
 SEPARATELY:
