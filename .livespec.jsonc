@@ -185,7 +185,11 @@
   //   }
   //
   // Credential-injection wrapper (fleet default) prefixed to the beads CLIs so a bare invocation self-heals its tenant secret.
-  "credential_wrapper": ["/usr/local/bin/with-livespec-env.sh", "--"],
+  // livespec-ai org cutover (stale-base-merge-options note 009): host-side GitHub
+  // App mints for this repository use the org App livespec-ai-factory-bot (5761962),
+  // which the wrapper projects as GITHUB_APP_ID_ORG / GITHUB_PRIVATE_KEY_ORG; the
+  // /bin/sh hop maps that pair onto the runtime's GITHUB_APP_ID / GITHUB_PRIVATE_KEY.
+  "credential_wrapper": ["/usr/local/bin/with-livespec-env.sh", "--", "/bin/sh", "-c", "GITHUB_APP_ID=\"$GITHUB_APP_ID_ORG\" GITHUB_PRIVATE_KEY=\"$GITHUB_PRIVATE_KEY_ORG\" exec \"$@\"", "sh"],
   "livespec-orchestrator-beads-fabro": {
     "format": "beads",
     "compat": {
@@ -318,7 +322,13 @@
           // (livespec-dev-tooling #2803), named under the fleet's environment
           // rename (livespec-dev-tooling-s6go5s). Plan kubernetes-sandbox-backend
           // (bd-ib-nmuyjc). Rollback to Docker: set it back to `livespec-ci-rust`.
-          "environment": "factory-python-rust"
+          "environment": "factory-python-rust",
+          // The org App pair in petri's vault (livespec-dev-tooling gmktec-xubuntu host_vars),
+          // so factory runs for this repository publish as livespec-ai-factory-bot.
+          "github_app": {
+            "app_id_secret": "ORG_GITHUB_APP_ID",
+            "private_key_secret": "/livespec-ai/github/livespec-ai-factory-bot/private-key"
+          }
         },
         // `candidate` is gmktec's fabro-server-candidate (:32278), the permanent
         // mirror of `petri` (maintainer ruling 2026-11-02T19:22:32Z), declared
