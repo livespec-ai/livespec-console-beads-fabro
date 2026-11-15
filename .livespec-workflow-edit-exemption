@@ -1,2 +1,2 @@
-work_item=livespec-console-beads-fabro-idpjm2
-reason=Drop the two waived-slug lines the v1.209.0 bump re-inserted into ci.yml (and the justfile), so #1374's net diff against master is exactly the bot's bump (version references plus the new canonical check-no-ambient-environment-loops); logically additive, authorized by legacy-coordinator-agent under the maintainer's additive delegation (coordinator-duties section 12); root defect livespec-dev-tooling-mlhzau.
+work_item=livespec-console-beads-fabro-nbx6vm
+reason=MAINTAINER tier (approval:workflow-edit applied by legacy-coordinator-agent under coordinator-duties §12, 2026-11-15). Org cutover owner rename only (thewoolleyman to livespec-ai) of uses: refs, repository: checkouts, the CI container GHCR names and owner/callback lines, for held draft PR livespec-console-beads-fabro#1381 (livespec-dev-tooling-nwzkto). Runs the same jobs; no merge_group. actionlint clean against master.

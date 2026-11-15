@@ -211,7 +211,7 @@ jobs:
     # self-hosted host's label to route to it instead.
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     container:
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
     env:
       # The image installs the pinned tools under /root (build-time HOME), but
       # container-hooks run steps with a DIFFERENT HOME — so mise's default data
@@ -403,7 +403,7 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     container:
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -528,7 +528,7 @@ jobs:
     # PUBLIC clone INSIDE the container (no host mount — containment preserved).
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     container:
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -556,7 +556,7 @@ jobs:
       - name: Checkout livespec core at the pinned ref
         uses: actions/checkout@v4
         with:
-          repository: thewoolleyman/livespec
+          repository: livespec-ai/livespec
           ref: ${{ steps.corepin.outputs.ref }}
           path: .livespec-core
 
@@ -576,7 +576,7 @@ jobs:
       - name: Checkout the orchestrator sibling (cited by external_references)
         uses: actions/checkout@v4
         with:
-          repository: thewoolleyman/livespec-orchestrator-beads-fabro
+          repository: livespec-ai/livespec-orchestrator-beads-fabro
           ref: master
           path: .livespec-siblings/livespec-orchestrator-beads-fabro
 
@@ -621,7 +621,7 @@ jobs:
     if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     container:
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -682,7 +682,7 @@ jobs:
     if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     container:
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -723,7 +723,7 @@ jobs:
     if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     container:
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -771,7 +771,7 @@ jobs:
       # wall, measured 2026-09-06; livespec-console-beads-fabro-gqmtwa.1). Bumped in
       # lockstep with the python-rust pins above by the fleet pin rewrite (the
       # layer prefix is preserved; only the version moves).
-      image: ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-rust-fuzz-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-fuzz-v1.209.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
