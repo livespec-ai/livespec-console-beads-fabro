@@ -375,16 +375,7 @@ its tenant only when ALL of the following are present:
 - **A running Dolt `sql-server`** reachable over **TCP `127.0.0.1:3307`**. Family
   tenants force TCP (not the unix socket); `.beads/config.yaml` carries `dolt.*`
   host/port keys with NO `socket` key.
-- **The tenant password** in env as a single **bare `BEADS_DOLT_PASSWORD`** —
-  injected by THIS project's configured env wrapper. This is a FAMILY tenant: it
-  shares the one family password via the family 1Password Environment wrapper
-  `with-livespec-env.sh` (canonical copy at
-  `~/workspace/1password-env-wrapper/with-livespec-env.sh`). `bd` consumes the
-  bare var — there is NO per-tenant `BEADS_DOLT_PASSWORD_<tenant>` variable and
-  NO per-tenant→bare mapping. Real isolation comes from the per-tenant SQL user +
-  DB-scoped grant, not from password distinctness. Secrets are probe-only —
-  `printenv NAME | wc -c`, never echo values — and NEVER committed to
-  `.livespec.jsonc` or `.beads/`.
+- **The tenant password** is the single bare `BEADS_DOLT_PASSWORD`, injected by this project’s configured wrapper. This family tenant shares the family password through `/usr/local/bin/with-livespec-env.sh --`. `bd` consumes the bare variable without a per-tenant suffix or mapping; the SQL user and DB-scoped grant provide isolation. Probe secrets without echoing values and never commit them to `.livespec.jsonc` or `.beads/`.
 - **The `.beads/` pointer files**: `config.yaml` (committed; the `dolt.*` server
   keys) and `metadata.json` (gitignored, regenerable). NEVER run `bd init` inside
   a primary checkout or worktree — it auto-commits and clobbers `.beads/`.

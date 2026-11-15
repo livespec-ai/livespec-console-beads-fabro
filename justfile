@@ -939,7 +939,7 @@ ensure-mutants-tooling:
 # filing host-side when an open chore already carries that fingerprint. A
 # nightly FINDING never fails master.
 #
-# NOT run under the 1Password environment wrapper, deliberately: per
+# NOT run under the configured credential wrapper, deliberately: per
 # SPECIFICATION/non-functional-requirements.md §Quality Gate (v048), CI MUST
 # NOT hold the work-items database credential. The job authenticates to the
 # ingress with the ci-writer SSH key alone (Actions secret
