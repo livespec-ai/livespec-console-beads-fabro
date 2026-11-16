@@ -70,10 +70,9 @@ plan_lifecycle_anchor = true
 delegated_gate = true
 # Gate Job size, matched to measured draw (plan gate-job-resources, livespec-dev-tooling-ukoeah):
 # Honeycomb k8s.pod.cpu.usage / k8s.pod.memory.working_set over the 24 h to 2026-11-16 19:0xZ, pods
-# gate-<this repo>-*: cpu P95 3.23 (max 3.23), memory max 3.73 GiB. The values add headroom.
+# gate-<this repo>-*: cpu P95 3.23 (max 3.23), memory max 3.73 GiB; memory stays at the 6Gi default (request = limit, 1.6x headroom).
 # Revert trigger: a gate CPU-throttled into a timeout, or gate wall-time p50 up over 25 % in 2 h.
 gate_cpu = 4
-gate_memory = "5Gi"
 
 # ---------------------------------------------------------------------------
 # Canonical-check wiring (livespec-console-beads-fabro-wzrct7; livespec-dev-
