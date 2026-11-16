@@ -365,9 +365,9 @@ The Dispatcher's routine dispositions are governed by the orchestrator-owned
 `review_fix_cap`, `acceptance_rework_cap`, and `wip_cap`, and it GROWS as the
 orchestrator ratifies further keys, so that enumeration is illustrative and
 MUST NOT be read as a fixed or exhaustive set (the owning declaration: repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`,
+`livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`, its Dispatcher policy settings section; design
-record: repo `thewoolleyman/livespec`, `plan/archive/autonomous-mode/handoff.md`).
+record: repo `livespec-ai/livespec`, `plan/archive/autonomous-mode/handoff.md`).
 They are independent and orthogonal: no setting implies another, and there is
 no master switch that arms several at once.
 
@@ -441,7 +441,7 @@ needs-attention inbox, work card list, event timeline, or repo health view.
 **Plan** -- The optional tier above the work-item: one goal with its
 children, its typed next action, and its handoff timeline. A plan is the
 orchestrator's ledger record for it, identified by the `plan_slug` its
-plan-identity contract (repo `thewoolleyman/livespec-orchestrator-beads-fabro`,
+plan-identity contract (repo `livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`
 §"Plan identity: `plan_slug` and the `associated_work_item_id` anchor")
 publishes; that contract owns the storage realization, and the console
