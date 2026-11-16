@@ -40,6 +40,9 @@ def inline_run_script(block: str) -> str:
     return "\n".join(body)
 
 
+GUARDED_NEEDS = "needs: [merge-group-guard, classify-changes]"
+
+
 def assert_workflow_wiring() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     classifier = workflow_job(workflow, "classify-changes")
@@ -56,14 +59,14 @@ def assert_workflow_wiring() -> None:
         "check-fuzz",
     ):
         block = workflow_job(workflow, job_id)
-        assert "needs: [merge-group-guard, classify-changes]" in block, f"{job_id} does not need classifier"
+        assert GUARDED_NEEDS in block, f"{job_id} does not need classifier"
         assert full_gate_condition in block, f"{job_id} is not fail-closed to the full gate"
 
     lightweight = workflow_job(workflow, "check-doctor-static")
-    assert "needs: [merge-group-guard, classify-changes]" in lightweight
+    assert GUARDED_NEEDS in lightweight
     assert "if: ${{ !cancelled() }}" in lightweight
     batch = workflow_job(workflow, "check-metadata-batch")
-    assert "needs: [merge-group-guard, classify-changes]" in batch
+    assert GUARDED_NEEDS in batch
     assert "if: ${{ !cancelled() }}" in batch
     for recipe in (
         "check-doctor-static",
