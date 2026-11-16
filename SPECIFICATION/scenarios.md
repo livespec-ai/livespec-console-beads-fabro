@@ -359,7 +359,7 @@ Scenario: Each overridable setting has exactly one console command
 
 The approve and policy-edit scenes below realize the orchestrator's ratified
 work-item state semantics (repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`, `SPECIFICATION/contracts.md`,
+`livespec-ai/livespec-orchestrator-beads-fabro`, `SPECIFICATION/contracts.md`,
 its Work-item state semantics section and its `drive` action-id surface):
 approve is the `pending-approval -> ready` transition and a policy edit never
 moves an item between states.

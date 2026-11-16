@@ -264,7 +264,7 @@ unranked -- AT THE FILING STEP.
 That landing does not rest there. The orchestrator's Dispatcher ledger
 normalization adopts every beads-native `open` row into `backlog` and
 assigns it a real, non-sentinel rank (repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`,
+`livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`, section "Work-item beads-issue mapping",
 sub-bullet "Adoption of a row a non-lifecycle writer left `open`
 assigns it a real rank"). That adoption is an orchestrator primitive:

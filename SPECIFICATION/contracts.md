@@ -118,7 +118,7 @@ asserted principal SHOULD take the form `console:<principal>`.
 
 This resolution order and the recommended form are consumed from the
 orchestrator plugin's ratified journal-invoker attribution contract (repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`, its `contracts.md` journal
+`livespec-ai/livespec-orchestrator-beads-fabro`, its `contracts.md` journal
 invoker attribution section), which names `console:<principal>` as an example
 identity. The console MUST NOT invent a second, divergent resolution order.
 
@@ -345,7 +345,7 @@ Initial adapters:
   zero Beads knowledge: this adapter MUST NOT invoke `bd` or parse
   Beads-native records, and MUST NOT re-derive a lane from `status` or any
   other field -- lane re-derivation is the shadow-state failure the
-  lifecycle design killed (design record: repo `thewoolleyman/livespec`,
+  lifecycle design killed (design record: repo `livespec-ai/livespec`,
   `plan/archive/work-item-state-machine/research/03-decision-log.md`,
   decisions 15/16).
 
@@ -391,7 +391,7 @@ Initial adapters:
   point-in-time snapshots into a durable event stream -- ALL event-sourcing
   lives in the console. This mirrors the Work-items adapter's
   snapshot-without-transition-history pattern (`scenarios.md` Scenario 4 and
-  the new Scenario 12; design record: repo `thewoolleyman/livespec`,
+  the new Scenario 12; design record: repo `livespec-ai/livespec`,
   `plan/archive/needs-attention/research/design.md` §"Statelessness and the console
   event-sourcing boundary"). The `needs-attention` CLI surface is owned by the
   orchestrator plugin, not the console; the console MUST NOT reach around this
@@ -419,7 +419,7 @@ Initial adapters:
   a JSON object carrying an `attention` array at all -- never for the items
   inside a readable one. This posture is the producer-declared contract this
   console pins from the orchestrator plugin (repo
-  `thewoolleyman/livespec-orchestrator-beads-fabro`, its `contracts.md`
+  `livespec-ai/livespec-orchestrator-beads-fabro`, its `contracts.md`
   per-item field-stability and consumer-tolerance posture), which the console
   MUST NOT re-derive or relax.
 
@@ -527,13 +527,13 @@ present; `work_item.move_requested`
 the `pending-approval -> ready` transition -- and a policy edit never moves an
 item between states (the no-surprise-transitions rule); these semantics and the
 two policy-edit action ids are the orchestrator's ratified contract (repo
-`thewoolleyman/livespec-orchestrator-beads-fabro`, `SPECIFICATION/contracts.md`,
+`livespec-ai/livespec-orchestrator-beads-fabro`, `SPECIFICATION/contracts.md`,
 its Work-item state semantics section and its `drive` action-id surface).
 `resolve-blocked` is the operator resolution of a `blocked` work-item to
 `ready` or `backlog`; the orchestrator source-guards it to a `blocked` item
 awaiting a human. `move` is the guarded relocation among the
 pre-terminal pipeline statuses, narrowed to the per-state operator verb
-vocabulary (repo `thewoolleyman/livespec-orchestrator-beads-fabro`,
+vocabulary (repo `livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`, its Per-state operator verb vocabulary
 section), which the console consumes as data: the move-status picker MUST
 offer, per source lane, exactly `backlog` -> {`ready`, `blocked`};
@@ -608,7 +608,7 @@ The console holds NO dispatcher-setting state of its own (see `spec.md` ->
 Dispatcher Policy Settings). The single persistent record of each setting is
 the orchestrator's own: the `dispatcher.*` keys in the repo's
 `.livespec.jsonc` for the global defaults, and the per-item ledger labels
-for the overrides (repo `thewoolleyman/livespec-orchestrator-beads-fabro`,
+for the overrides (repo `livespec-ai/livespec-orchestrator-beads-fabro`,
 `SPECIFICATION/contracts.md`, its Dispatcher policy settings section). The
 console's Configuration context MUST derive each effective value by reading
 the orchestrator's published read surface, and MUST NOT persist a second,
@@ -933,7 +933,7 @@ actionable). When every source is observed the header carries no phantom
 unavailability count, so a true-empty screen is never dressed as a false
 alarm.
 
-The TUI's Status line MUST render context-specific shortcut key hints — the keys that act in the CURRENTLY-focused context — and MUST NOT render a static or empty hint line where actions are available. The hints MUST reflect the currently-focused pane: switching focus to a different pane MUST change the hints to that pane's available actions. The hints MUST also reflect any open modal or overlay: opening a modal or overlay MUST replace the pane's hints with the hints for that modal/overlay, and closing it MUST restore the focused pane's hints. No context in which shortcut actions are available may show an empty hint line. A hint MUST NOT advertise a binding the key does not perform in that context — a hint that names an action the key does not take is worse than no hint, because the operator cannot tell a broken key from a mis-documented one. Concretely: a key whose action differs between two contexts (including between a view's sub-views) MUST be described by the action it actually performs in the current one; and a key that acts only on a selected work-item MUST NOT be listed where no work-item is selected, which includes a lane overview (whose selection is a lane, not an item) and an empty drilled-in lane. Finer-grained per-item suppression is REQUIRED: a per-item verb hint MUST be suppressed, and its key MUST be inert, when the selected work-item's lifecycle state does not admit the verb per the per-state operator verb vocabulary (repo `thewoolleyman/livespec-orchestrator-beads-fabro`, `SPECIFICATION/contracts.md`, its Per-state operator verb vocabulary section), which the console consumes as data and MUST NOT re-derive: approve only at `pending-approval`; accept only at `acceptance`; reject only at the two human-valve lanes (`pending-approval` and `acceptance`); the policy dials only within their upstream windows (set-admission through `pending-approval`; merge-on-review-cap and review-fix-cap through `ready`; set-acceptance and acceptance-rework-cap through `active`; none on `done`). The suppression rule MUST NOT assume `active` has a single entry door: that vocabulary admits journaled dispatch AND the rework returns from `acceptance`, so an `acceptance`-lane item MUST keep its reject hint. A hint that names a verb the vocabulary forbids for the selected item violates this clause's honesty rule. The specific hint strings and key bindings are an implementation detail; the contract is that the hint line is non-empty, honest, and appropriate to the currently-focused pane and any open overlay, and changes as focus or overlay changes.
+The TUI's Status line MUST render context-specific shortcut key hints — the keys that act in the CURRENTLY-focused context — and MUST NOT render a static or empty hint line where actions are available. The hints MUST reflect the currently-focused pane: switching focus to a different pane MUST change the hints to that pane's available actions. The hints MUST also reflect any open modal or overlay: opening a modal or overlay MUST replace the pane's hints with the hints for that modal/overlay, and closing it MUST restore the focused pane's hints. No context in which shortcut actions are available may show an empty hint line. A hint MUST NOT advertise a binding the key does not perform in that context — a hint that names an action the key does not take is worse than no hint, because the operator cannot tell a broken key from a mis-documented one. Concretely: a key whose action differs between two contexts (including between a view's sub-views) MUST be described by the action it actually performs in the current one; and a key that acts only on a selected work-item MUST NOT be listed where no work-item is selected, which includes a lane overview (whose selection is a lane, not an item) and an empty drilled-in lane. Finer-grained per-item suppression is REQUIRED: a per-item verb hint MUST be suppressed, and its key MUST be inert, when the selected work-item's lifecycle state does not admit the verb per the per-state operator verb vocabulary (repo `livespec-ai/livespec-orchestrator-beads-fabro`, `SPECIFICATION/contracts.md`, its Per-state operator verb vocabulary section), which the console consumes as data and MUST NOT re-derive: approve only at `pending-approval`; accept only at `acceptance`; reject only at the two human-valve lanes (`pending-approval` and `acceptance`); the policy dials only within their upstream windows (set-admission through `pending-approval`; merge-on-review-cap and review-fix-cap through `ready`; set-acceptance and acceptance-rework-cap through `active`; none on `done`). The suppression rule MUST NOT assume `active` has a single entry door: that vocabulary admits journaled dispatch AND the rework returns from `acceptance`, so an `acceptance`-lane item MUST keep its reject hint. A hint that names a verb the vocabulary forbids for the selected item violates this clause's honesty rule. The specific hint strings and key bindings are an implementation detail; the contract is that the hint line is non-empty, honest, and appropriate to the currently-focused pane and any open overlay, and changes as focus or overlay changes.
 
 The TUI MUST offer a driver-handoff verb whose meaning is lane-appropriate per the same per-state vocabulary: on a `backlog` item it MUST render the groom invocation for the selected work-item id; on a `ready` item whose `factory_safety` is non-null — exactly the set the orchestrator's dispatch admission refuses to sandbox and host-routes — it MUST render the driver-implement invocation for the id; in every other state the verb MUST be suppressed. The rendered command MUST be the existing orchestrator operation invocation carrying only the work-item id — no prompt file is written; the tmp-file slot remains reserved and deliberately unbuilt (design record: `plan/archive/operator-surface-redesign/research/l4p3ce-handoff-transport.md`, its transport decisions). The command MUST render in a full-width overlay that preserves copyability, and the console MAY additionally emit it via OSC 52. The overlay MUST NOT claim the copy succeeded — OSC 52 is fire-and-forget and success is unknowable to the console; permitted wording describes what the console did (for example "copy sent to terminal"), and wording asserting an unobservable outcome (for example "Copied!") is forbidden, because a terminal with clipboard disabled would otherwise leave the operator pasting stale content while believing they copied. The console MUST NOT execute, spawn, monitor, or await the driver session; the driver session journals its own dispatch through the orchestrator's driver-dispatch surface, and widening driver-implement beyond the host-only-refused set MUST NOT be done without the claim mechanism that vocabulary names as its precondition. The specific key binding is an implementation detail. Adopter precondition: the rendered invocation resolves only in a driver session whose project has the orchestrator plugin installed; a console adopter without that plugin gets a non-resolving handoff the console cannot detect.
 
