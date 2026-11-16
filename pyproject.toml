@@ -60,6 +60,12 @@ livespec-dev-tooling = { git = "https://github.com/thewoolleyman/livespec-dev-to
 livespec-runtime = { git = "https://github.com/thewoolleyman/livespec-runtime.git", tag = "v0.30.2" }
 
 [tool.livespec_dev_tooling]
+# The merge queue's trusted authors (org merge-queue cutover, carrier bd-ib-bcxyfa).
+# ci.yml's merge-group-guard reads this list at the merge group's BASE commit and
+# routes the group to hosted capacity unless every queued PR is same-repository and
+# authored by a name on it. The personal-account factory bot stays until every
+# dispatch host mints as the org App.
+merge_queue_author_allowlist = ["thewoolleyman", "thewoolleyman-factory-bot", "livespec-ai-factory-bot", "livespec-ai-factory-bot[bot]"]
 plan_lifecycle_anchor = true
 # Delegate this repository's pre-push aggregate to the `gates` namespace of the
 # self-hosted k3s gate cluster (work-item livespec-console-beads-fabro-3n5k7m,
