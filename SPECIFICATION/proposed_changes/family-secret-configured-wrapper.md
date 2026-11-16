@@ -16,7 +16,7 @@ The Beads/Fabro Family Secret Convention clause, the Contributor Scenario E flow
 
 ### Motivation
 
-livespec v249 (thewoolleyman/livespec#3252, non-functional-requirements.md fleet-secrets section) makes AWS Systems Manager Parameter Store the single canonical source for fleet secrets, including fleet tenants' beads/Dolt passwords, makes the livespec 1Password Environment a temporary downstream copy, and keeps `/usr/local/bin/with-livespec-env.sh` and its calling convention for callers while only its backend becomes homelab's shared-credentials launcher at each host's conversion. A 1Password backend label in this clause would go false host by host; the interface wording stays true throughout. Plan epic overseer-iyfjbo, change-plan entry C03.
+livespec v249 (livespec-ai/livespec#3252, non-functional-requirements.md fleet-secrets section) makes AWS Systems Manager Parameter Store the single canonical source for fleet secrets, including fleet tenants' beads/Dolt passwords, makes the livespec 1Password Environment a temporary downstream copy, and keeps `/usr/local/bin/with-livespec-env.sh` and its calling convention for callers while only its backend becomes homelab's shared-credentials launcher at each host's conversion. A 1Password backend label in this clause would go false host by host; the interface wording stays true throughout. Plan epic overseer-iyfjbo, change-plan entry C03.
 
 ### Proposed Changes
 
