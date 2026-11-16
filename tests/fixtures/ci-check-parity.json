@@ -7,6 +7,11 @@
       "reason": "Hosted changed-files classifier for pull-request and canonical-push base/head pairs. Local just check has no event pair to classify; its production script is exercised by check-docs-only-ci instead."
     },
     {
+      "name": "merge-group-guard",
+      "present_in_just_check": false,
+      "reason": "Hosted first job of ci.yml that resolves a merge_group's queued pull requests against merge_queue_author_allowlist and outputs whether the group may use self-hosted capacity (org merge-queue cutover, livespec-dev-tooling-frkuef). It is a forge-side routing decision over the merge queue API with no local analogue; its shape is verified statically by self_hosted_routing."
+    },
+    {
       "name": "check-charters",
       "present_in_ci": false,
       "reason": "Runs in the janitor/local aggregate to enforce shipped charter-defect detectors over this repo's two enumerated charters; this factory slice may not edit .github/workflows/ to add the matching CI matrix job."
