@@ -56,14 +56,14 @@ def assert_workflow_wiring() -> None:
         "check-fuzz",
     ):
         block = workflow_job(workflow, job_id)
-        assert "needs: classify-changes" in block, f"{job_id} does not need classifier"
+        assert "needs: [merge-group-guard, classify-changes]" in block, f"{job_id} does not need classifier"
         assert full_gate_condition in block, f"{job_id} is not fail-closed to the full gate"
 
     lightweight = workflow_job(workflow, "check-doctor-static")
-    assert "needs: classify-changes" in lightweight
+    assert "needs: [merge-group-guard, classify-changes]" in lightweight
     assert "if: ${{ !cancelled() }}" in lightweight
     batch = workflow_job(workflow, "check-metadata-batch")
-    assert "needs: classify-changes" in batch
+    assert "needs: [merge-group-guard, classify-changes]" in batch
     assert "if: ${{ !cancelled() }}" in batch
     for recipe in (
         "check-doctor-static",
