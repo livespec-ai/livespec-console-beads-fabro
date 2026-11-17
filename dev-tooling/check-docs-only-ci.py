@@ -137,6 +137,85 @@ def check_lane_verifier() -> None:
             assert verify_lane("false", tuple(results)) != 0
 
 
+def check_skip_lane_verifier() -> None:
+    # Under the tree-equality skip the required `check` legs RUN as no-ops (success) and
+    # every other gated job is skipped by its `if:`.
+    skipped_heavy: tuple[str, ...] = ("success", "skipped", "skipped", "skipped", "skipped")
+    assert (
+        verify_lane("false", skipped_heavy, doctor="skipped", metadata="skipped", guard_skip="true")
+        == 0
+    )
+    # On the documentation-only lane `check` is job-skipped as always.
+    assert (
+        verify_lane("true", ALL_SKIPPED, doctor="skipped", metadata="skipped", guard_skip="true")
+        == 0
+    )
+    # A job-level skip of the matrix is NOT acceptable under the skip.
+    assert (
+        verify_lane("false", ALL_SKIPPED, doctor="skipped", metadata="skipped", guard_skip="true")
+        != 0
+    )
+    for bad_check in ("failure", "cancelled", "skipped"):
+        results: tuple[str, ...] = (bad_check, *skipped_heavy[1:])
+        assert (
+            verify_lane("false", results, doctor="skipped", metadata="skipped", guard_skip="true")
+            != 0
+        )
+    # Every other job must read exactly `skipped`.
+    for index in range(1, 5):
+        for bad_result in ("success", "failure", "cancelled"):
+            mutated: list[str] = list(skipped_heavy)
+            mutated[index] = bad_result
+            assert (
+                verify_lane(
+                    "false", tuple(mutated), doctor="skipped", metadata="skipped", guard_skip="true"
+                )
+                != 0
+            )
+    for bad_light in ("success", "failure", "cancelled"):
+        assert (
+            verify_lane(
+                "false", skipped_heavy, doctor=bad_light, metadata="skipped", guard_skip="true"
+            )
+            != 0
+        )
+        assert (
+            verify_lane(
+                "false", skipped_heavy, doctor="skipped", metadata=bad_light, guard_skip="true"
+            )
+            != 0
+        )
+    # The classifier still gates a skipped group, and an invalid classifier output still fails.
+    for bad_classifier in ("failure", "cancelled", "skipped"):
+        assert (
+            verify_lane(
+                "false",
+                skipped_heavy,
+                classifier=bad_classifier,
+                doctor="skipped",
+                metadata="skipped",
+                guard_skip="true",
+            )
+            != 0
+        )
+    assert (
+        verify_lane(
+            "garbage", skipped_heavy, doctor="skipped", metadata="skipped", guard_skip="true"
+        )
+        != 0
+    )
+    # Anything but the literal `true` is the full lane: kill switch, unset, empty, `false`.
+    for not_skip in ("", "false", "TRUE", "garbage"):
+        assert (
+            verify_lane(
+                "false", skipped_heavy, doctor="skipped", metadata="skipped", guard_skip=not_skip
+            )
+            != 0
+        )
+        assert verify_lane("false", ALL_SUCCESS, guard_skip=not_skip) == 0
+    assert verify_lane("false", ALL_SUCCESS) == 0
+
+
 def main() -> None:
     assert CLASSIFIER.is_file(), f"missing classifier: {CLASSIFIER}"
     check_true_classifications()
@@ -144,6 +223,7 @@ def main() -> None:
     check_degenerate_ranges()
     assert_workflow_wiring()
     check_lane_verifier()
+    check_skip_lane_verifier()
     print("check-docs-only-ci: classification and lane wiring are fail-closed")
 
 

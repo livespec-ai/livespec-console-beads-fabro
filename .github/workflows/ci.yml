@@ -186,10 +186,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      actions: read
+      checks: read
       contents: read
       pull-requests: read
     outputs:
       trusted: ${{ steps.guard.outputs.trusted }}
+      skip: ${{ steps.skip.outputs.skip || 'false' }}
     steps:
       - name: Resolve the merge group's pull requests against the allowlist
         id: guard
@@ -266,6 +269,58 @@ jobs:
           fi
           echo "trusted=true" >> "$GITHUB_OUTPUT"
 
+      # THE TREE-EQUALITY SKIP (livespec-dev-tooling-ymog6r rollout; plan
+      # stale-base-merge-options, epic livespec-dev-tooling-xowhol, maintainer ruling
+      # 2026-11-16). `skip` is true ONLY for a one-entry merge group whose head tree equals
+      # its pull request head's tree, on a base the head contains, whose head's required
+      # Actions check runs ALL read success on the forge and whose head ci-green reported no
+      # incident-omitted set; every other case, any error included, is false and the whole
+      # job graph runs. The decision code is NOT in this repo's tree: it is fetched from the
+      # livespec-dev-tooling release tarball at the tag this repo pins in pyproject.toml
+      # [tool.uv.sources], read AT THE GROUP'S BASE COMMIT, never the enqueued tree, so a
+      # pull request cannot change how its own group is judged. A pinned release that does
+      # not carry the module (or any unreadable pin or tarball) answers false. The step is
+      # best-effort (`continue-on-error`) and event-guarded in the SHELL, as the allowlist
+      # step above is. The kill switch is the repository variable
+      # LIVESPEC_MERGE_GROUP_SKIP_DISABLED=true, which forces skip=false.
+      - name: Decide the tree-equality skip from the forge (merge_group only)
+        id: skip
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_BASE_REF: ${{ github.event.merge_group.base_ref }}
+          LIVESPEC_MERGE_GROUP_SKIP_DISABLED: ${{ vars.LIVESPEC_MERGE_GROUP_SKIP_DISABLED }}
+        run: |
+          skip=false
+          if [ "$GITHUB_EVENT_NAME" = "merge_group" ]; then
+            base_dir="${RUNNER_TEMP}/skip-base"
+            mkdir -p "$base_dir"
+            tag="$(gh api -H 'Accept: application/vnd.github.raw' "repos/${GITHUB_REPOSITORY}/contents/pyproject.toml?ref=${MG_BASE_SHA}" | python3 -c 'import sys, tomllib; print(tomllib.loads(sys.stdin.read())["tool"]["uv"]["sources"]["livespec-dev-tooling"]["tag"])' || true)"
+            case "$tag" in
+              v[0-9]*) ;;
+              *) tag="" ;;
+            esac
+            if [ -n "$tag" ] && gh api "repos/livespec-ai/livespec-dev-tooling/tarball/${tag}" | tar -xz --strip-components=1 -C "$base_dir" --wildcards '*/livespec_dev_tooling/*'; then
+              pythonpath="$base_dir"
+              if ! python3 -c 'import typing_extensions' 2>/dev/null; then
+                if python3 -m pip install --quiet --disable-pip-version-check --target "${RUNNER_TEMP}/skip-deps" 'typing_extensions==4.15.0'; then
+                  pythonpath="${pythonpath}:${RUNNER_TEMP}/skip-deps"
+                fi
+              fi
+              out="$(PYTHONPATH="$pythonpath" python3 -m livespec_dev_tooling.merge_group_skip || true)"
+              printf '%s\n' "$out" | sed 's/^/merge_group_skip: /' || true
+              printf '%s\n' "$out"
+              if printf '%s\n' "$out" | grep -qx 'skip=true'; then
+                skip=true
+              fi
+            else
+              echo "::warning::merge-group-guard: the pinned dev-tooling release's decision code was unreadable; running the full suite"
+            fi
+          fi
+          echo "skip=${skip}" >> "$GITHUB_OUTPUT"
+
   # Fail-closed classifier for the ratified code-neutral documentation lane.
   # The comparison uses the PR's actual base/head commits (or a canonical push's
   # before/head commits), not the checkout's synthetic merge commit. The
@@ -321,7 +376,7 @@ jobs:
     # self-hosted host's label to route to it instead.
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.217.0
     env:
       # The image installs the pinned tools under /root (build-time HOME), but
       # container-hooks run steps with a DIFFERENT HOME — so mise's default data
@@ -371,7 +426,18 @@ jobs:
           - check-plugin-resolution
           - check-docs-only-ci
     steps:
+      # THE TREE-EQUALITY SKIP IS STEP-LEVEL HERE, never a job-level skip of this matrix. Every
+      # leg of this job is a REQUIRED status context (the merge-queue ruleset names the legs),
+      # and a job skipped by `if:` reports one unexpanded `${{ matrix.target }}` check instead
+      # of one context per leg, which would stall the queue. So each leg ALWAYS runs and
+      # reports success, and when merge-group-guard says skip=true every step below (all
+      # carry the same guard term) is skipped, making the leg a no-op that still creates its
+      # named context. The guard output is the single source: skip is 'true' or anything else.
+      - name: Report the tree-equality skip (this leg is a no-op when skip=true)
+        run: echo "merge-group-guard skip=${{ needs.merge-group-guard.outputs.skip }}; a leg runs its steps only when skip is not true"
+
       - name: Checkout
+        if: ${{ needs.merge-group-guard.outputs.skip != 'true' }}
         uses: actions/checkout@v4
 
       # Hosted routing (CI_RUNNER_LABELS='["ubuntu-latest"]') keeps the baked
@@ -383,6 +449,7 @@ jobs:
       # gitconfig (HOME=/github/home, preserved across the scrub) so every git
       # call reads it. No-op on the self-hosted lane.
       - name: Trust workspace for git (hosted container root-vs-checkout uid)
+        if: ${{ needs.merge-group-guard.outputs.skip != 'true' }}
         run: git config --global --add safe.directory '*'
 
       # The Rust toolchain is BAKED into the python-rust image (rustc/cargo/
@@ -395,6 +462,7 @@ jobs:
       # checkout's .mise.toml is trusted by construction on both lanes
       # (livespec-console-beads-fabro-gqmtwa.2; fleet follow-up dev-tooling yuh0).
       - name: mise install (baked tools — a near-no-op)
+        if: ${{ needs.merge-group-guard.outputs.skip != 'true' }}
         run: mise install
 
       # The actions/cache steps (cargo registry + git + target, and the uv cache
@@ -412,7 +480,7 @@ jobs:
 
       # ---- baseline (worktree-discipline) reuse: uv env + hook install ----
       - name: Install commit-refuse hook (satisfy baseline verifier)
-        if: matrix.target == 'check-baseline'
+        if: matrix.target == 'check-baseline' && needs.merge-group-guard.outputs.skip != 'true'
         run: just install-commit-refuse-hooks
 
       # SPLIT OUT of the combined step above so the pack can be installed for a
@@ -440,8 +508,9 @@ jobs:
       # `worktree-land` and `worktree-reap`.
       - name: Install canonical worktree pack (satisfy pack invariant)
         if: >-
-          matrix.target == 'check-baseline'
-          || matrix.target == 'check-shell-quality'
+          (matrix.target == 'check-baseline'
+          || matrix.target == 'check-shell-quality')
+          && needs.merge-group-guard.outputs.skip != 'true'
         run: just install-worktree-pack
 
       # Prebuild ALL FOUR quality tools (not just the target's own) for every job
@@ -452,7 +521,7 @@ jobs:
       # nextest+llvm-cov from source). The taiki-e prebuilt binaries are on PATH,
       # so ensure-rust-quality-tools finds them and returns immediately.
       - name: Install rust quality tools (prebuilt — avoids source builds)
-        if: matrix.target == 'check-nextest' || matrix.target == 'check-coverage' || matrix.target == 'check-deps'
+        if: (matrix.target == 'check-nextest' || matrix.target == 'check-coverage' || matrix.target == 'check-deps') && needs.merge-group-guard.outputs.skip != 'true'
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest,cargo-llvm-cov,cargo-deny,cargo-machete
@@ -481,21 +550,21 @@ jobs:
       # No cache tier is added, so no eviction policy is owed. Measured
       # before→after on the plan item.
       - name: "Phase: compile"
-        if: matrix.target == 'check-nextest'
+        if: matrix.target == 'check-nextest' && needs.merge-group-guard.outputs.skip != 'true'
         env:
           CARGO_BUILD_JOBS: "12"
         run: cargo nextest run --workspace --all-features --no-run
 
       - name: "Phase: test"
-        if: matrix.target == 'check-nextest'
+        if: matrix.target == 'check-nextest' && needs.merge-group-guard.outputs.skip != 'true'
         run: just check-nextest
 
       - name: "Phase: compile"
-        if: matrix.target == 'check-clippy'
+        if: matrix.target == 'check-clippy' && needs.merge-group-guard.outputs.skip != 'true'
         run: just check-clippy
 
       - name: just ${{ matrix.target }}
-        if: matrix.target != 'check-nextest' && matrix.target != 'check-clippy'
+        if: matrix.target != 'check-nextest' && matrix.target != 'check-clippy' && needs.merge-group-guard.outputs.skip != 'true'
         run: just ${{ matrix.target }}
 
   # Batched canonical and repo-local checks (livespec-console-beads-fabro-wzrct7),
@@ -510,10 +579,10 @@ jobs:
   check-metadata-batch:
     name: check-metadata-batch
     needs: [merge-group-guard, classify-changes]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.217.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -633,12 +702,12 @@ jobs:
   check-doctor-static:
     name: check-doctor-static
     needs: [merge-group-guard, classify-changes]
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && needs.merge-group-guard.outputs.skip != 'true' }}
     # Self-hosted in the baked image. The livespec-core checkout below is a fresh
     # PUBLIC clone INSIDE the container (no host mount — containment preserved).
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.217.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -728,10 +797,10 @@ jobs:
   check-e2e-tmux:
     name: check-e2e-tmux
     needs: [merge-group-guard, classify-changes]
-    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.217.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -789,10 +858,10 @@ jobs:
   check-real-store-smoke:
     name: check-real-store-smoke
     needs: [merge-group-guard, classify-changes]
-    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.217.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -830,10 +899,10 @@ jobs:
   check-mutants:
     name: check-mutants
     needs: [merge-group-guard, classify-changes]
-    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.217.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -872,7 +941,7 @@ jobs:
   check-fuzz:
     name: check-fuzz
     needs: [merge-group-guard, classify-changes]
-    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
       # The fuzz-only leaf of the sandbox tree (dev-tooling python-rust-fuzz): the
@@ -881,7 +950,7 @@ jobs:
       # wall, measured 2026-09-06; livespec-console-beads-fabro-gqmtwa.1). Bumped in
       # lockstep with the python-rust pins above by the fleet pin rewrite (the
       # layer prefix is preserved; only the version moves).
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-fuzz-v1.209.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-fuzz-v1.217.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -984,16 +1053,9 @@ jobs:
   # Adding another job without adding it here silently reopens the gap.
   ci-green:
     name: ci-green
-    needs:
-      - merge-group-guard
-      - classify-changes
-      - check
-      - check-metadata-batch
-      - check-doctor-static
-      - check-e2e-tmux
-      - check-real-store-smoke
-      - check-mutants
-      - check-fuzz
+    # Inline flow list on purpose: livespec-dev-tooling's ci_green_required_legs reads the
+    # gate's needs from this one-line form (a block list derives no required legs).
+    needs: [merge-group-guard, classify-changes, check, check-metadata-batch, check-doctor-static, check-e2e-tmux, check-real-store-smoke, check-mutants, check-fuzz]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -1008,6 +1070,7 @@ jobs:
           REAL_STORE_RESULT: ${{ needs.check-real-store-smoke.result }}
           MUTANTS_RESULT: ${{ needs.check-mutants.result }}
           FUZZ_RESULT: ${{ needs.check-fuzz.result }}
+          GUARD_SKIP: ${{ needs.merge-group-guard.outputs.skip }}
         run: |
           set -euo pipefail
           required_result() {
@@ -1021,8 +1084,6 @@ jobs:
           }
 
           required_result classify-changes "$CLASSIFIER_RESULT" success
-          required_result check-doctor-static "$DOCTOR_RESULT" success
-          required_result check-metadata-batch "$METADATA_RESULT" success
 
           case "$DOCS_ONLY" in
             true) expected_heavy=skipped ;;
@@ -1033,11 +1094,38 @@ jobs:
               ;;
           esac
 
+          # The tree-equality skip (livespec-dev-tooling-ymog6r). The `check` matrix legs are
+          # REQUIRED contexts, so the skip is step-level inside each leg: `check` still runs
+          # and must read `success` (or `skipped` only on the documentation-only lane, as
+          # always), while every other gated job is skipped by its `if:` and must read exactly
+          # `skipped`. A job that ran and failed, or was cancelled, still fails the gate.
+          if [ "${GUARD_SKIP:-false}" = "true" ]; then
+            required_result check "$CHECK_RESULT" "$expected_heavy"
+            required_result check-doctor-static "$DOCTOR_RESULT" skipped
+            required_result check-metadata-batch "$METADATA_RESULT" skipped
+            required_result check-e2e-tmux "$E2E_RESULT" skipped
+            required_result check-real-store-smoke "$REAL_STORE_RESULT" skipped
+            required_result check-mutants "$MUTANTS_RESULT" skipped
+            required_result check-fuzz "$FUZZ_RESULT" skipped
+            exit 0
+          fi
+
+          required_result check-doctor-static "$DOCTOR_RESULT" success
+          required_result check-metadata-batch "$METADATA_RESULT" success
+
           required_result check "$CHECK_RESULT" "$expected_heavy"
           required_result check-e2e-tmux "$E2E_RESULT" "$expected_heavy"
           required_result check-real-store-smoke "$REAL_STORE_RESULT" "$expected_heavy"
           required_result check-mutants "$MUTANTS_RESULT" "$expected_heavy"
           required_result check-fuzz "$FUZZ_RESULT" "$expected_heavy"
+      # The tree-equality skip reads this step's conclusion on a PR head's ci-green: `skipped`
+      # means no incident-omitted set. This repo has no incident-ci job, so no run can ever
+      # omit members and the step is skipped by construction (a never-true event-name test,
+      # because actionlint refuses a constant `false`); the name matches
+      # livespec-dev-tooling's merge_group_skip._OMITTED_STEP.
+      - name: Report members omitted-by-incident-policy
+        if: ${{ github.event_name == 'incident-omission-never-occurs-here' }}
+        run: exit 1
 
   # Byte-for-byte copy of the livespec CORE reference
   # (.github/scripts/export-ci-telemetry.sh); repo-agnostic, driven by
