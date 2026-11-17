@@ -72,10 +72,30 @@ def test_check_matrix_wiring_rejects_a_job_level_skip(workflow: ModuleType) -> N
         workflow.assert_check_matrix_skips_at_step_level(job)
 
 
+def test_check_matrix_wiring_rejects_a_docs_only_job_level_skip(workflow: ModuleType) -> None:
+    job = "    if: ${{ needs.classify-changes.outputs.docs_only != 'true' }}\n    steps:\n"
+    with pytest.raises(AssertionError, match="must not be skipped at job level"):
+        workflow.assert_check_matrix_skips_at_step_level(job)
+
+
+def test_check_matrix_wiring_rejects_a_step_missing_the_docs_only_guard(
+    workflow: ModuleType,
+) -> None:
+    job = (
+        "    if: ${{ !cancelled() }}\n    steps:\n"
+        "      - name: Report the skips (x)\n        run: echo\n"
+        "      - name: Checkout\n"
+        "        if: ${{ needs.merge-group-guard.outputs.skip != 'true' }}\n"
+        "        uses: actions/checkout@v4\n"
+    )
+    with pytest.raises(AssertionError, match="lacks the skip guard"):
+        workflow.assert_check_matrix_skips_at_step_level(job)
+
+
 def test_check_matrix_wiring_rejects_an_unguarded_step(workflow: ModuleType) -> None:
     job = (
         "    if: ${{ !cancelled() }}\n    steps:\n"
-        "      - name: Report the tree-equality skip (x)\n        run: echo\n"
+        "      - name: Report the skips (x)\n        run: echo\n"
         "      - name: Checkout\n        uses: actions/checkout@v4\n"
     )
     with pytest.raises(AssertionError, match="lacks the skip guard"):

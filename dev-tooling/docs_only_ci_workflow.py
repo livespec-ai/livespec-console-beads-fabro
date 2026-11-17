@@ -51,8 +51,8 @@ def assert_workflow_wiring() -> None:
     assert "docs_only:" in classifier
 
     full_gate_condition = "!cancelled() && needs.classify-changes.outputs.docs_only != 'true'"
+    assert GUARDED_NEEDS in workflow_job(workflow, "check"), "check does not need classifier"
     for job_id in (
-        "check",
         "check-e2e-tmux",
         "check-real-store-smoke",
         "check-mutants",
@@ -106,24 +106,29 @@ def assert_workflow_wiring() -> None:
         assert f"required_result {job_id}" in aggregate
 
 
-SKIP_TERM = "needs.merge-group-guard.outputs.skip != 'true'"
+SKIP_TERMS = (
+    "needs.merge-group-guard.outputs.skip != 'true'",
+    "needs.classify-changes.outputs.docs_only != 'true'",
+)
 
 
 def assert_check_matrix_skips_at_step_level(check_job: str) -> None:
-    """The required `check` legs must never be job-skipped by the tree-equality skip."""
+    """The required `check` legs must never be job-skipped by either skip."""
     job_if = next(line for line in check_job.splitlines() if line.startswith("    if:"))
     assert "merge-group-guard" not in job_if, "check matrix must not be skipped at job level"
+    assert "docs_only" not in job_if, "check matrix must not be skipped at job level"
     head, _, steps = check_job.partition("    steps:\n")
     assert head
     assert steps
     blocks = steps.split("      - name:")[1:]
     assert blocks
-    assert "Report the tree-equality skip" in blocks[0]
+    assert "Report the skips" in blocks[0]
     assert "if:" not in blocks[0], "the reporting step must always run"
     for block in blocks[1:]:
         condition = block.partition("        if:")[2].partition("        run:")[0]
         condition = condition.partition("        uses:")[0]
-        assert SKIP_TERM in condition, f"check step lacks the skip guard: {block.splitlines()[0]}"
+        for term in SKIP_TERMS:
+            assert term in condition, f"check step lacks the skip guard: {block.splitlines()[0]}"
 
 
 def lane_verifier() -> str:

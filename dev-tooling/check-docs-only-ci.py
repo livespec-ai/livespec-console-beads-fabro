@@ -8,6 +8,8 @@ from docs_only_ci_workflow import assert_workflow_wiring, verify_lane
 
 ALL_SUCCESS = ("success", "success", "success", "success", "success")
 ALL_SKIPPED = ("skipped", "skipped", "skipped", "skipped", "skipped")
+# The documentation-only lane: the required `check` legs run as no-ops and report success.
+DOCS_ONLY_LANE = ("success", "skipped", "skipped", "skipped", "skipped")
 
 
 def check_true_classifications() -> None:
@@ -118,9 +120,9 @@ def check_degenerate_ranges() -> None:
 
 
 def check_lane_verifier() -> None:
-    assert verify_lane("true", ALL_SKIPPED) == 0
+    assert verify_lane("true", DOCS_ONLY_LANE) == 0
     assert verify_lane("false", ALL_SUCCESS) == 0
-    assert verify_lane("true", ("success", "skipped", "skipped", "skipped", "skipped")) != 0
+    assert verify_lane("true", ALL_SKIPPED) != 0
     assert verify_lane("false", ("skipped", "success", "success", "success", "success")) != 0
     for invalid_docs_only in ("", "garbage"):
         assert verify_lane(invalid_docs_only, ALL_SUCCESS) != 0
@@ -129,7 +131,7 @@ def check_lane_verifier() -> None:
     for bad_doctor in ("failure", "cancelled", "skipped"):
         assert verify_lane("false", ALL_SUCCESS, doctor=bad_doctor) != 0
     for bad_metadata in ("failure", "cancelled", "skipped"):
-        assert verify_lane("true", ALL_SKIPPED, metadata=bad_metadata) != 0
+        assert verify_lane("true", DOCS_ONLY_LANE, metadata=bad_metadata) != 0
     for index in range(5):
         for bad_result in ("failure", "cancelled", "skipped"):
             results: list[str] = list(ALL_SUCCESS)
@@ -145,9 +147,9 @@ def check_skip_lane_verifier() -> None:
         verify_lane("false", skipped_heavy, doctor="skipped", metadata="skipped", guard_skip="true")
         == 0
     )
-    # On the documentation-only lane `check` is job-skipped as always.
+    # On the documentation-only lane `check` runs its legs as no-ops too.
     assert (
-        verify_lane("true", ALL_SKIPPED, doctor="skipped", metadata="skipped", guard_skip="true")
+        verify_lane("true", DOCS_ONLY_LANE, doctor="skipped", metadata="skipped", guard_skip="true")
         == 0
     )
     # A job-level skip of the matrix is NOT acceptable under the skip.

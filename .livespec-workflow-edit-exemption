@@ -1,2 +1,2 @@
-work_item=livespec-console-beads-fabro-pmxurh
-reason=Widen the export-telemetry job condition to also run for merge_group events so merge-queue runs emit ci.run spans to Honeycomb (maintainer ruling 2026-11-17).
+work_item=livespec-console-beads-fabro-p76n5x
+reason=Docs-only lane skips the check matrix at step level instead of job level so every queue-required leg reports; code PRs run every step unchanged; console half of livespec-dev-tooling-czpzvw, authorized by throughput-plans-coordinator section 12 ruling 2026-11-17; tier is maintainer.
