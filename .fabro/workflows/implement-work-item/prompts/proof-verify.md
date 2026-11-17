@@ -152,6 +152,16 @@ For each `factory_captured` assertion, execute its numbered steps
   test of a program YOU wrote, which proves nothing about the one the
   capture ran — and it would report a green that no later replay can earn.
 
+### Keep repository check aggregates serial
+
+Replay a record's steps with at most ONE repository check aggregate running at a time.
+Do this even when the record's steps start several aggregates at once.
+That unsafe schedule is the one replay detail you must not reproduce: run each
+aggregate to its terminal exit before starting the next, without a trailing
+`&` inside one tool call or parallel tool calls. Preserve every individual
+command and expected observation; if serial execution disagrees with an
+expected observation, record the resulting non-reproduction.
+
 ## Step 3 — capture your own proof
 
 Capture per assertion the same way the record did — a screenshot for
@@ -329,6 +339,43 @@ A captured record that lists a host-captured assertion as pending the host
 leg has NOT thereby discharged any `factory_captured` assertion, and the
 verdict you publish is about the factory ones alone.
 
+### Classify every non-reproduction: FIDELITY or BEHAVIOUR
+
+For each assertion you name as not reproduced, classify the difference, and
+classify the difference as either FIDELITY or BEHAVIOUR:
+
+- FIDELITY means the replay's observable behavioural result equals the
+  captured one and only the record's rendering differs: the interleaving or
+  ordering of output streams, whitespace, or formatting. The classic case is a
+  captured program that buffers stdout and not stderr, so on replay the two
+  streams interleave differently in the combined terminal output while every
+  line, exit status and file effect is identical.
+- BEHAVIOUR means the behavioural result differs (a different value, exit
+  status, file effect or refusal, or a step that cannot be followed), or cannot
+  be compared.
+
+A difference you cannot positively show to be fidelity is BEHAVIOUR. Showing it
+means naming the behavioural result both runs produced and stating that they
+are equal; a hunch that the difference is cosmetic is not showing it. A
+missing program source, an unfollowable step, a missing or digest-mismatched
+attachment and an incomplete record are always BEHAVIOUR.
+
+State the classification inside each not-reproduced assertion's OWN section,
+on its own prose line beside that assertion's `Reproduced:` line, as exactly
+one of:
+
+    Difference: fidelity
+    Difference: behaviour
+
+The verdict you publish follows from the set, not from any one assertion:
+
+- When EVERY assertion you name as not reproduced is FIDELITY, the whole
+  verdict is a **fidelity verdict**. The tree has nothing to fix, because the
+  behaviour reproduced; the record is what must be repaired, and the run
+  re-captures it.
+- ONE behaviour difference among them makes the whole verdict a behaviour
+  verdict, whatever the others are.
+
 ### An INCOMPLETE factory proof record is `not_reproduced`
 
 A record that leaves a `factory_captured` assertion with no capture —
@@ -392,7 +439,18 @@ verbatim:
     Proof of Done — verified — run <run-id> — <UTC timestamp>
     Proof of Done — not_reproduced — run <run-id> — <UTC timestamp>
 
-using the run id you resolved in Step 3 and an ISO-8601 UTC timestamp.
+using the run id you resolved in Step 3 and a UTC timestamp that is a CLOCK
+READING, never a time you estimated, rounded or composed yourself. Read the
+clock in the SAME command that writes the header, immediately before you
+post, so the time is no later than the instant the comment is created and
+within minutes of it:
+
+    stamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf 'Proof of Done — %s — run %s — %s\n' "<verified or not_reproduced>" "<run-id>" "$stamp" > <file>
+
+Write the rest of the body to that file before or after this command, but if
+more than a minute passes between this command and the `gh pr comment` that
+posts the file, run it again to refresh the time before posting.
 
 The SECOND line must declare, exactly once, the publish-branch head YOUR
 replay ran on:
@@ -461,7 +519,9 @@ The body then carries, **per assertion in Definition of Done order**:
    Step 3) for each screenshot, and a fenced code block for each text
    capture.
 5. Whether that assertion reproduced. On a `not_reproduced` record this is
-   the load-bearing line: the acceptance pass reads it per assertion.
+   the load-bearing line: the acceptance pass reads it per assertion. Beside it,
+   every assertion that did not reproduce carries its `Difference: fidelity` or
+   `Difference: behaviour` line from the classification section above.
 
 When this item has any `host_captured` assertions, the record MUST also
 carry a heading stating that those assertions are **pending the host leg**,
@@ -514,6 +574,8 @@ not:
     Reproduced: NO. Step 2 renders the runs page with no capacity banner;
     the captured proof 02 shows one.
 
+    Difference: behaviour
+
 ## Step 6 — route the verdict
 
 Report, in your final reply: the pull request number, the comment id or URL
@@ -524,16 +586,25 @@ verbatim.
 Then end your reply with a single JSON object on the LAST line:
 
 - verdict `verified`:        `{"preferred_next_label": "approve"}`
-- verdict `not_reproduced`:  `{"preferred_next_label": "fix"}`
+- verdict `not_reproduced`, behaviour verdict (at least one BEHAVIOUR
+  difference): `{"preferred_next_label": "fix"}`
+- verdict `not_reproduced`, fidelity verdict (EVERY non-reproduced assertion is
+  FIDELITY): `{"preferred_next_label": "recapture"}`
 
 Use those exact lowercase tokens. `approve` is the ONLY label that reaches
 the `pr` node, and it is a conditional edge: nothing publishes on a verdict
 other than `verified`. `fix` routes to the `fix` node, where a code change
 belongs; the loop then re-earns a green janitor, re-captures, is re-reviewed
-and returns here. That return is bounded — a third non-reproduction routes to
-the `non_converged` terminal and the Dispatcher marks the slice
-`needs-regroom` — so do NOT soften a verdict to keep the loop alive. A
-slice that cannot converge is supposed to say so.
+and returns here. `recapture` routes to `proof_capture` through the recapture
+route, which re-captures the record without a tree change and without a fix
+round; a fidelity verdict never routes to `fix`. The behaviour loop is
+bounded — a third behaviour non-reproduction routes to the `non_converged`
+terminal and the Dispatcher marks the slice `needs-regroom` — and the
+recapture route is bounded by the same two-lap allowance a review recapture
+verdict uses, so a third recapture in one run, from either source, also routes
+to `non_converged`. Do NOT soften a verdict to keep a loop alive, and do NOT
+label a difference fidelity to avoid a fix round: a slice that cannot converge
+is supposed to say so.
 
 ## When the replay is blocked (needs-human protocol)
 
