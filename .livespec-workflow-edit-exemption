@@ -1,2 +1,2 @@
-work_item=livespec-console-beads-fabro-pbn5kx
-reason=Guarded merge_group trigger for the org merge queue (plan stale-base-merge-options, carrier livespec-dev-tooling-frkuef; maintainer ruling 2026-11-16 to turn on the merge queue for every org repo). Adds the merge_group trigger and the merge-group-guard job and routes each gating job through the guard; the existing runs-on expression is kept as the trusted arm. Logically additive per coordinator delegation, but the diff rewrites runs-on/needs lines so the mechanical tier is MAINTAINER (no change=additive attested).
+work_item=livespec-console-beads-fabro-67ipiw
+reason=Merge-group tree-equality skip rollout (guard skip output plus the skip term on every gating job's if, ci-green accepting all-skipped only when skip is true), ratified by the maintainer 2026-11-16 on plan stale-base-merge-options, epic livespec-dev-tooling-xowhol, carrier livespec-dev-tooling-ymog6r; tier is maintainer.

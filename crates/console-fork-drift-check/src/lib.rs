@@ -902,7 +902,7 @@ mod tests {
     #[test]
     fn a_fork_image_line_under_the_livespec_ai_owner_normalizes_like_the_old_owner() {
         let upstream = b"steps = []\ndocker = \"ghcr.io/thewoolleyman/livespec-fabro-sandbox:python-agent-v1.0.0\"\ncommit_timeout = \"10m\"\n";
-        let fork = b"steps = []\ndocker = \"ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.209.0\"\ncommit_timeout = \"10m\"\n";
+        let fork = b"steps = []\ndocker = \"ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-agent-v1.217.0\"\ncommit_timeout = \"10m\"\n";
         let dir = scratch("workflow-image-org-owner");
         let _ = std::fs::write(dir.join(WORKFLOW_TOML), fork);
         let findings = verdict(

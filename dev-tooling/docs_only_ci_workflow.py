@@ -62,12 +62,16 @@ def assert_workflow_wiring() -> None:
         assert GUARDED_NEEDS in block, f"{job_id} does not need classifier"
         assert full_gate_condition in block, f"{job_id} is not fail-closed to the full gate"
 
+    assert_check_matrix_skips_at_step_level(workflow_job(workflow, "check"))
+
     lightweight = workflow_job(workflow, "check-doctor-static")
     assert GUARDED_NEEDS in lightweight
-    assert "if: ${{ !cancelled() }}" in lightweight
+    assert (
+        "if: ${{ !cancelled() && needs.merge-group-guard.outputs.skip != 'true' }}" in lightweight
+    )
     batch = workflow_job(workflow, "check-metadata-batch")
     assert GUARDED_NEEDS in batch
-    assert "if: ${{ !cancelled() }}" in batch
+    assert "if: ${{ !cancelled() && needs.merge-group-guard.outputs.skip != 'true' }}" in batch
     for recipe in (
         "check-doctor-static",
         "check-charters",
@@ -102,6 +106,26 @@ def assert_workflow_wiring() -> None:
         assert f"required_result {job_id}" in aggregate
 
 
+SKIP_TERM = "needs.merge-group-guard.outputs.skip != 'true'"
+
+
+def assert_check_matrix_skips_at_step_level(check_job: str) -> None:
+    """The required `check` legs must never be job-skipped by the tree-equality skip."""
+    job_if = next(line for line in check_job.splitlines() if line.startswith("    if:"))
+    assert "merge-group-guard" not in job_if, "check matrix must not be skipped at job level"
+    head, _, steps = check_job.partition("    steps:\n")
+    assert head
+    assert steps
+    blocks = steps.split("      - name:")[1:]
+    assert blocks
+    assert "Report the tree-equality skip" in blocks[0]
+    assert "if:" not in blocks[0], "the reporting step must always run"
+    for block in blocks[1:]:
+        condition = block.partition("        if:")[2].partition("        run:")[0]
+        condition = condition.partition("        uses:")[0]
+        assert SKIP_TERM in condition, f"check step lacks the skip guard: {block.splitlines()[0]}"
+
+
 def lane_verifier() -> str:
     workflow = WORKFLOW.read_text(encoding="utf-8")
     return inline_run_script(workflow_job(workflow, "ci-green"))
@@ -114,6 +138,7 @@ def verify_lane(
     classifier: str = "success",
     doctor: str = "success",
     metadata: str = "success",
+    guard_skip: str | None = None,
 ) -> int:
     assert len(expected) == 5
     env = os.environ.copy()
@@ -130,4 +155,6 @@ def verify_lane(
             "FUZZ_RESULT": expected[4],
         }
     )
+    if guard_skip is not None:
+        env["GUARD_SKIP"] = guard_skip
     return run("bash", "-c", lane_verifier(), cwd=ROOT, check=False, env=env).returncode

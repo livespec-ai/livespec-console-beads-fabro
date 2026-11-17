@@ -58,3 +58,25 @@ def test_inline_run_script_asserts_without_a_run_marker(workflow: ModuleType) ->
 def test_inline_run_script_asserts_on_an_empty_script(workflow: ModuleType) -> None:
     with pytest.raises(AssertionError, match="is empty"):
         workflow.inline_run_script("        run: |\n        next: key\n")
+
+
+def test_skip_lane_verifier_keeps_every_required_leg_running(
+    load_script: Callable[[str], ModuleType],
+) -> None:
+    load_script("check-docs-only-ci.py").check_skip_lane_verifier()
+
+
+def test_check_matrix_wiring_rejects_a_job_level_skip(workflow: ModuleType) -> None:
+    job = "    if: ${{ needs.merge-group-guard.outputs.skip != 'true' }}\n    steps:\n"
+    with pytest.raises(AssertionError, match="must not be skipped at job level"):
+        workflow.assert_check_matrix_skips_at_step_level(job)
+
+
+def test_check_matrix_wiring_rejects_an_unguarded_step(workflow: ModuleType) -> None:
+    job = (
+        "    if: ${{ !cancelled() }}\n    steps:\n"
+        "      - name: Report the tree-equality skip (x)\n        run: echo\n"
+        "      - name: Checkout\n        uses: actions/checkout@v4\n"
+    )
+    with pytest.raises(AssertionError, match="lacks the skip guard"):
+        workflow.assert_check_matrix_skips_at_step_level(job)
