@@ -221,7 +221,7 @@ the project pin is usually already current (`claude plugin update ... --scope
 project` reports "already at the latest version"), because a running session
 keeps the build it resolved at kickoff. The marketplace moved twice in one
 session on 2026-08-21. Re-invoke the dispatcher from the currently pinned build
-path, or restart the session — see `.ai/livespec-plugin-currency.md`.
+path, or restart the session — see [`.ai/livespec-plugin-currency.md`](livespec-plugin-currency.md).
 
 ### The `ci-green` wall is a RACE in this repo, not a health problem
 
