@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/livespec-ai/livespec-console-beads-fabro/compare/v0.5.0...v0.6.0) (2026-11-17)
+
+
+### Features
+
+* **config:** petri client moves to the 0.393 bbe693847 carrier build ([3e3d382](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/3e3d382407b7021fee97ac28946d6bca95e38d08))
+* **config:** route petri runs and host mints through the livespec-ai org App ([26d9940](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/26d9940d3a17ba3ba7b808f78959e7f250e33c20))
+* **tui:** Lanes plan column names the parent plan, blank when plan-less ([71ed6a8](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/71ed6a86a384d86d6f3e7171b2ca49f62a63bf67))
+
+
+### Bug Fixes
+
+* **deps:** bump rusqlite to 0.41.1 past RUSTSEC-2026-0459 (bundled SQLite 3.54.1) ([c7db208](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/c7db208330d9087485aba0f1bd31709ff0a2205a))
+* **fabro:** pin merge queue arm retry ([0e70952](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/0e70952a659ebe4fe307fd796a910110b6c69287))
+* **org-move:** point livespec-console-beads-fabro at the livespec-ai organization (livespec-dev-tooling-nwzkto) ([b9d834c](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/b9d834cf6b7da38bc2932ff4f9bed024e62051ee))
+* resolve the clone root through ~/workspace in docs, recipes and cache eviction ([25dfd50](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/25dfd5012af63c27c7449e9aff13ebe56d5e89e0))
+* **test:** name --cov-config in pytest addopts so a bare --cov run combines ([fc7855e](https://github.com/livespec-ai/livespec-console-beads-fabro/commit/fc7855eb6cc6c2ef12d5fcc2d364aa4f354de5f0))
+
 ## [0.5.0](https://github.com/thewoolleyman/livespec-console-beads-fabro/compare/v0.4.0...v0.5.0) (2026-10-30)
 
 
