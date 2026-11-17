@@ -1,2 +1,2 @@
-work_item=livespec-console-beads-fabro-67ipiw
-reason=Merge-group tree-equality skip rollout (guard skip output plus the skip term on every gating job's if, ci-green accepting all-skipped only when skip is true), ratified by the maintainer 2026-11-16 on plan stale-base-merge-options, epic livespec-dev-tooling-xowhol, carrier livespec-dev-tooling-ymog6r; tier is maintainer.
+work_item=livespec-console-beads-fabro-pmxurh
+reason=Widen the export-telemetry job condition to also run for merge_group events so merge-queue runs emit ci.run spans to Honeycomb (maintainer ruling 2026-11-17).

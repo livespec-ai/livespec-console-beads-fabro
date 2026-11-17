@@ -1146,7 +1146,7 @@ jobs:
     # PR runs now emit per-job telemetry too (fail-soft, via EXPORT_FAIL_SOFT
     # below) so optimization work can see before/after deltas on the PR, not
     # only after merge; push(master) keeps the closed-loop fail-loud contract.
-    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'pull_request') }}
+    if: ${{ !cancelled() && (github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'merge_group') }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
