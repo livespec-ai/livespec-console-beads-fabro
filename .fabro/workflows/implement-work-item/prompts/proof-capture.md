@@ -75,6 +75,21 @@ They arrive by **two routes, and you must try both**:
 
    Take the LATEST `Review findings` comment, not the first.
 
+**A recapture entry from `proof_verify`** reaches you the same two ways, and
+its issuing record is a different one. When the `recapture_route` output in
+the preamble is preceded by the `proof_verify` stage rather than by `review`,
+the independent replay found the record's reproduction steps to differ from
+your capture only in FIDELITY: the behavioural result was identical and only
+the record's rendering differed (stream interleaving, ordering, whitespace or
+formatting). The durable second route is then the LATEST comment whose first
+line opens `Proof of Done — not_reproduced — run `, not a `Review findings`
+comment. Each assertion section of it carries a `Difference: fidelity` line
+and says what rendered differently. Address each one in the record you are
+about to post: make the proof independent of the rendering that moved — for
+example, capture each stream to its own file, or flush the buffered stream
+explicitly in the step — and publish a new CURRENT record, never an edit of an
+earlier one. The tree is correct and stays unmodified.
+
 Every `[BLOCKING]` line tagged `(proof-record)` is a defect in the record you
 must fix in the one you are about to post. The four kinds are: a record that
 is not current for the publish head, a behavioural assertion proved by
@@ -191,6 +206,14 @@ If a step does not work, FIX THE STEP, re-run from the top of that
 assertion's sequence, and publish the corrected version. Never publish a
 step you did not run, and never publish output from a command other than
 the one the step names.
+
+### Keep repository check aggregates serial
+
+Run at most ONE repository check aggregate at a time in this sandbox.
+A trailing `&` inside one tool call breaks this rule.
+Parallel tool calls that start check aggregates also break this rule.
+Wait for each aggregate to finish before starting the next one, even when the
+checks target separate copies of the repository.
 
 ## Step 4 — capture the proof
 

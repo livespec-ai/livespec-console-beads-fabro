@@ -209,9 +209,9 @@ fn committed_fork_pins_v0_336_2_and_retries_merge_queue_arming() -> Result<(), S
     let graph = fs::read_to_string(root.join(FORK_DIR).join("workflow.fabro"))
         .map_err(|error| format!("cannot read workflow.fabro: {error}"))?;
     assert!(
-        graph.contains("livespec_pr_merge \"$1\" \"$2\" --delete-branch")
+        graph.contains("livespec_pr_merge \\\"$1\\\" \\\"$2\\\" --delete-branch")
             && graph.contains("when merge queue enabled")
-            && graph.contains("livespec_pr_merge \"$1\" \"$2\";;"),
+            && graph.contains("livespec_pr_merge \\\"$1\\\" \\\"$2\\\";;"),
         "the publication arm must retry once without --delete-branch when a merge queue rejects it"
     );
     Ok(())
