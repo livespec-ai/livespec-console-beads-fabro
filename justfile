@@ -1,4 +1,5 @@
 # justfile — livespec-console-beads-fabro task runner.
+# DoD 12 equal-tree proof marker (livespec-dev-tooling-xowhol): comment-only, no behaviour.
 
 # Worktree-discipline pack recipe fragments — OPTIONAL imports (`import?`, NOT
 # plain `import`). The two `.just` fragments are gitignored + installed (written
