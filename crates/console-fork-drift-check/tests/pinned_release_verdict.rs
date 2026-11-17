@@ -35,6 +35,9 @@ const FORKED_FILE: &str = "prompts/implement.md";
 /// The orchestrator release the throwaway fixture pins — the plugin cache hash,
 /// which is the release tag's own commit, exactly as the real fixture records it.
 const PINNED_RELEASE: &str = "b8eafc6f1d10";
+/// The release this repository's committed bundle must track for the
+/// merge-queue-safe publication arm.
+const CONSOLE_FORK_RELEASE: &str = "887bc90fda82f292b05f841bcd33d85aaf462841";
 /// A LATER orchestrator release, installed on the host and nowhere in the
 /// committed fixture.
 const NEWER_RELEASE: &str = "0f1e2d3c4b5a";
@@ -184,6 +187,32 @@ fn this_repositorys_committed_fork_matches_the_release_its_fixture_pins() -> Res
     assert!(
         currency_warning(&rendered).is_none(),
         "an unresolvable install is not a currency warning — nothing was compared: {rendered}"
+    );
+    Ok(())
+}
+
+/// The console fork deliberately retains its Rust-capable image, but the graph
+/// and prompts track the orchestrator bundle. In v0.336.2 that graph preserves
+/// the normal branch-deleting arm and retries without branch deletion when the
+/// forge says a merge queue owns deletion.
+#[test]
+fn committed_fork_pins_v0_336_2_and_retries_merge_queue_arming() -> Result<(), String> {
+    let root = repository_root()?;
+    let manifest = fs::read_to_string(root.join(PIN_MANIFEST))
+        .map_err(|error| format!("cannot read {PIN_MANIFEST}: {error}"))?;
+    assert_eq!(
+        console_fork_drift_check::parse_pinned_release(&manifest)?,
+        CONSOLE_FORK_RELEASE,
+        "the fixture must pin the v0.336.2 release that contains the merge-queue retry"
+    );
+
+    let graph = fs::read_to_string(root.join(FORK_DIR).join("workflow.fabro"))
+        .map_err(|error| format!("cannot read workflow.fabro: {error}"))?;
+    assert!(
+        graph.contains("livespec_pr_merge \"$1\" \"$2\" --delete-branch")
+            && graph.contains("when merge queue enabled")
+            && graph.contains("livespec_pr_merge \"$1\" \"$2\";;"),
+        "the publication arm must retry once without --delete-branch when a merge queue rejects it"
     );
     Ok(())
 }
