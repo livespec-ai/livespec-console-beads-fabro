@@ -109,7 +109,16 @@ const MANIFEST: &str = ".release-please-manifest.json";
 /// the 0.5.0 changelog: the release is additive (features and fixes), and the
 /// only removal is an internal dead match arm in `console-application`, which
 /// the acceptance run did not exercise.
-const DOCS_REVIEWED_AGAINST: &str = "0.5.0";
+///
+/// ## The 0.6.0 re-read
+///
+/// Claims (1) and (2) remain HISTORICAL at `v0.2.0` and untouched; 0.6.0 has
+/// not been through a fresh acceptance run either. Claim (3) is retargeted to
+/// `v0.6.0`. Its superset-of-the-acceptance-run claim was re-checked against
+/// the 0.6.0 changelog: the release is additive (configuration, TUI display,
+/// dependency/security, organization, and documentation fixes), and it removes
+/// no behavior that the acceptance run exercised.
+const DOCS_REVIEWED_AGAINST: &str = "0.6.0";
 
 fn repo_root() -> std::io::Result<PathBuf> {
     Path::new(env!("CARGO_MANIFEST_DIR"))
