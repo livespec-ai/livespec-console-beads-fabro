@@ -204,6 +204,7 @@ fn span_attributes(payload: &Value) -> Result<BTreeMap<String, BTreeMap<String, 
                 attribute.get("key").and_then(Value::as_str),
                 attribute
                     .pointer("/value/stringValue")
+                    .or_else(|| attribute.pointer("/value/intValue"))
                     .and_then(Value::as_str),
             ) else {
                 continue;
@@ -466,5 +467,65 @@ fn a_rejected_payload_still_fails_the_export() -> Result<()> {
         "{}",
         describe(&output)
     );
+    Ok(())
+}
+
+/// Honeycomb cannot join a child span to its parent's attributes, so job time
+/// can only be split by push / `pull_request` / `merge_group` when every `ci.job.*`
+/// span carries the run's `git.branch` and `ci.event` itself, with the same
+/// values the `ci.run` span carries.
+#[test]
+fn every_ci_job_span_carries_the_event_and_branch_of_its_run() -> Result<()> {
+    require_jq()?;
+    let harness = Harness::new(
+        "event-branch",
+        "ci-telemetry-run-view-merge-group.json",
+        "ci-telemetry-jobs-api.json",
+    )?;
+
+    let output = harness.export("200", "0")?;
+    assert!(output.status.success(), "{}", describe(&output));
+
+    let payload = captured_payload(&harness)?;
+    let run = run_span_attributes(&payload)?;
+    let by_job = job_span_attributes(&payload)?;
+    assert_eq!(by_job.len(), 2, "{payload}");
+    let queue_ms = |name: &str| by_job.get(name).and_then(|a| a.get("ci.job.queue_ms"));
+    assert_eq!(
+        queue_ms("ci.job.check-format").map(String::as_str),
+        Some("10000")
+    );
+    assert_eq!(
+        queue_ms("ci.job.check-deps").map(String::as_str),
+        Some("5000")
+    );
+    assert_eq!(
+        run.get("ci.run_attempt").map(String::as_str),
+        Some("2"),
+        "{run:?}"
+    );
+    for (name, attributes) in &by_job {
+        assert_eq!(
+            attributes.get("ci.run_attempt").map(String::as_str),
+            Some("2"),
+            "{name}: {attributes:?}"
+        );
+        assert_eq!(
+            attributes.get("ci.event").map(String::as_str),
+            Some("merge_group"),
+            "{name}: {attributes:?}"
+        );
+        assert_eq!(
+            attributes.get("git.branch").map(String::as_str),
+            Some("gh-readonly-queue/master/pr-1-abc"),
+            "{name}: {attributes:?}"
+        );
+        assert_eq!(attributes.get("ci.event"), run.get("ci.event"), "{name}");
+        assert_eq!(
+            attributes.get("git.branch"),
+            run.get("git.branch"),
+            "{name}"
+        );
+    }
     Ok(())
 }
