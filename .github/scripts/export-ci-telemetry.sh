@@ -81,7 +81,7 @@ hex32() { printf '%032x' "$1"; }            # 16-byte trace id
 hex16() { printf '%016x' "$1"; }            # 8-byte span id
 
 run_json="$(gh run view "$RUN_ID" --repo "$REPO" \
-  --json databaseId,headSha,headBranch,event,displayTitle,conclusion,createdAt,startedAt,updatedAt,jobs)"
+  --json databaseId,attempt,headSha,headBranch,event,displayTitle,conclusion,createdAt,startedAt,updatedAt,jobs)"
 
 # Runner identity needs a SECOND call: `gh run view --json jobs` projects gh's
 # own Job struct (databaseId/name/conclusion/steps/timestamps) and has no field
@@ -94,7 +94,7 @@ run_json="$(gh run view "$RUN_ID" --repo "$REPO" \
 # E2BIG class documented below.
 runners_file="$(mktemp)"
 gh api --paginate "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100" \
-  --jq '.jobs[] | {id, runner_name, labels}' >"$runners_file"
+  --jq '.jobs[] | {id, runner_name, labels, created_at}' >"$runners_file"
 
 trace_id="$(hex32 "$RUN_ID")"
 run_span_id="$(hex16 "$RUN_ID")"
@@ -102,6 +102,7 @@ run_start="$(iso_to_nanos "$(jq -r '.startedAt // .createdAt' <<<"$run_json")")"
 run_end="$(iso_to_nanos "$(jq -r '.updatedAt' <<<"$run_json")")"
 run_concl="$(jq -r '.conclusion // ""' <<<"$run_json")"
 run_status="$(jq -r '.status // ""' <<<"$run_json")"
+run_attempt="$(jq -r '.attempt // 1' <<<"$run_json")"
 run_code=2; [ "$run_concl" = "success" ] && run_code=1
 
 # `ci.conclusion` must never be EMPTY, on this span or on any job span below.
@@ -148,6 +149,12 @@ run_outcome="$run_concl"
 [ -n "$run_outcome" ] || run_outcome="$run_status"
 [ -n "$run_outcome" ] || run_outcome="unknown"
 [ -n "$run_status" ] || run_status="unknown"
+# The job spans repeat the run span's `git.branch` and `ci.event` (read from the
+# same `run_json`) because Honeycomb cannot join a child span to its parent's
+# attributes, so job time can only be split by push / pull_request /
+# merge_group if each job span carries them itself.
+run_branch="$(jq -r '.headBranch // ""' <<<"$run_json")"
+run_event="$(jq -r '.event // ""' <<<"$run_json")"
 
 # `$run_json` carries the whole `jobs` array and MUST reach jq on stdin, never
 # as a `--argjson` value. Passing it on argv died with "jq: Argument list too
@@ -164,13 +171,15 @@ run_outcome="$run_concl"
 run_span="$(jq -c \
   --arg trace "$trace_id" --arg span "$run_span_id" \
   --arg start "$run_start" --arg end "$run_end" \
-  --arg repo "$REPO" --argjson run_id "$RUN_ID" --argjson code "$run_code" \
+  --arg repo "$REPO" --argjson run_id "$RUN_ID" --argjson run_attempt "$run_attempt" \
+  --argjson code "$run_code" \
   --arg outcome "$run_outcome" --arg run_status "$run_status" '
   {traceId:$trace, spanId:$span, name:"ci.run", kind:1,
    startTimeUnixNano:$start, endTimeUnixNano:$end,
    attributes:[
      {key:"repo",value:{stringValue:$repo}},
      {key:"ci.run_id",value:{intValue:($run_id|tostring)}},
+     {key:"ci.run_attempt",value:{intValue:($run_attempt|tostring)}},
      {key:"ci.conclusion",value:{stringValue:$outcome}},
      {key:"ci.run.status",value:{stringValue:$run_status}},
      {key:"ci.title",value:{stringValue:(.displayTitle // "")}},
@@ -198,13 +207,22 @@ job_spans="[]"
 # guard keeps a job that has not finished from emitting a span ending in year 1.
 us=$'\x1f'
 zero_time="0001-01-01T00:00:00Z"
-while IFS="$us" read -r jid jname jconcl jstatus jstart_iso jend_iso jrunner jlabels; do
+while IFS="$us" read -r jid jname jconcl jstatus jstart_iso jend_iso jrunner jlabels jcreated_iso; do
   [ -n "$jstart_iso" ] && [ "$jstart_iso" != "null" ] && [ "$jstart_iso" != "$zero_time" ] || continue
   [ -n "$jend_iso" ] && [ "$jend_iso" != "null" ] && [ "$jend_iso" != "$zero_time" ] || continue
   jspan_id="$(hex16 "$jid")"
   jstart="$(iso_to_nanos "$jstart_iso")"
   jend="$(iso_to_nanos "$jend_iso")"
   jcode=2; [ "$jconcl" = "success" ] && jcode=1
+  # queue_ms: started_at - created_at (created_at comes from the jobs REST
+  # payload, which `gh run view --json jobs` does not carry); 0 when the job
+  # has no created_at, and never negative.
+  jqueue_ms=0
+  if [ -n "$jcreated_iso" ]; then
+    jcreated="$(iso_to_nanos "$jcreated_iso")"
+    jqueue_ms=$(( (jstart - jcreated) / 1000000 ))
+    [ "$jqueue_ms" -ge 0 ] || jqueue_ms=0
+  fi
   # Same never-empty contract as the run span, and the same fallback order. A
   # job reaching here has already passed the two timestamp guards above, so it
   # has genuinely finished and `$jconcl` is populated in practice; the status
@@ -227,19 +245,25 @@ while IFS="$us" read -r jid jname jconcl jstatus jstart_iso jend_iso jrunner jla
     --arg repo "$REPO" --argjson run_id "$RUN_ID" \
     --arg jname "$jname" --arg jconcl "$jconcl" --argjson code "$jcode" \
     --arg jout "$jout" --arg run_status "$run_status" \
-    --arg jrunner "$jrunner" --arg jlabels "$jlabels" --arg jkind "$jkind" '
+    --arg jrunner "$jrunner" --arg jlabels "$jlabels" --arg jkind "$jkind" \
+    --arg branch "$run_branch" --arg event "$run_event" \
+    --argjson run_attempt "$run_attempt" --argjson jqueue "$jqueue_ms" '
     {traceId:$trace, spanId:$span, parentSpanId:$parent, name:$name, kind:1,
      startTimeUnixNano:$start, endTimeUnixNano:$end,
      attributes:[
        {key:"repo",value:{stringValue:$repo}},
        {key:"ci.run_id",value:{intValue:($run_id|tostring)}},
+       {key:"ci.run_attempt",value:{intValue:($run_attempt|tostring)}},
        {key:"ci.job.name",value:{stringValue:$jname}},
        {key:"ci.conclusion",value:{stringValue:$jout}},
        {key:"ci.run.status",value:{stringValue:$run_status}},
        {key:"ci.job.conclusion",value:{stringValue:$jconcl}},
        {key:"ci.runner.name",value:{stringValue:$jrunner}},
        {key:"ci.runner.labels",value:{stringValue:$jlabels}},
-       {key:"ci.runner.kind",value:{stringValue:$jkind}}
+       {key:"ci.runner.kind",value:{stringValue:$jkind}},
+       {key:"git.branch",value:{stringValue:$branch}},
+       {key:"ci.event",value:{stringValue:$event}},
+       {key:"ci.job.queue_ms",value:{intValue:($jqueue|tostring)}}
      ],
      status:{code:$code}}')"
   job_spans="$(jq -c ". + [$span]" <<<"$job_spans")"
@@ -250,7 +274,8 @@ done < <(jq -r --slurpfile runners "$runners_file" '
   | ($by_id[($job.databaseId|tostring)] // {}) as $runner
   | [.databaseId, .name, (.conclusion // ""), (.status // ""),
      (.startedAt // ""), (.completedAt // ""),
-     ($runner.runner_name // ""), (($runner.labels // []) | join(","))]
+     ($runner.runner_name // ""), (($runner.labels // []) | join(",")),
+     ($runner.created_at // "")]
   | map(tostring) | join("\u001f")' <<<"$run_json")
 
 # Same argv-limit class as the run span above: `$job_spans` grows with the job
