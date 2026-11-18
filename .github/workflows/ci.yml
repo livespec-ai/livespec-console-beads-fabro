@@ -376,7 +376,7 @@ jobs:
     # self-hosted host's label to route to it instead.
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.224.0
     env:
       # The image installs the pinned tools under /root (build-time HOME), but
       # container-hooks run steps with a DIFFERENT HOME — so mise's default data
@@ -582,7 +582,7 @@ jobs:
     if: ${{ !cancelled() && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.224.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -707,7 +707,7 @@ jobs:
     # PUBLIC clone INSIDE the container (no host mount — containment preserved).
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.224.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -800,7 +800,7 @@ jobs:
     if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.224.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -861,7 +861,7 @@ jobs:
     if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.224.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -902,7 +902,7 @@ jobs:
     if: ${{ !cancelled() && needs.classify-changes.outputs.docs_only != 'true' && needs.merge-group-guard.outputs.skip != 'true' }}
     runs-on: ${{ needs.merge-group-guard.outputs.trusted == 'true' && fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-v1.224.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
@@ -950,7 +950,7 @@ jobs:
       # wall, measured 2026-09-06; livespec-console-beads-fabro-gqmtwa.1). Bumped in
       # lockstep with the python-rust pins above by the fleet pin rewrite (the
       # layer prefix is preserved; only the version moves).
-      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-fuzz-v1.223.0
+      image: ghcr.io/livespec-ai/livespec-fabro-sandbox:python-rust-fuzz-v1.224.0
     env:
       MISE_DATA_DIR: /root/.local/share/mise
       MISE_NOT_FOUND_AUTO_INSTALL: "0"
