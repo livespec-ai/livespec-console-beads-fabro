@@ -24,6 +24,9 @@
 #   BUILD_CACHE_HIT             — true | false
 #   BUILD_EMIT_FAIL_SOFT        — set to 1 for fail-soft (local use)
 #   HONEYCOMB_BUILD_ENDPOINT    — override default api.honeycomb.io endpoint
+# Refuse xtrace: it would print the Honeycomb ingest key this script expands.
+case $- in *x*) echo 'emit-build-telemetry: refusing to run under xtrace (it would print the Honeycomb key)' >&2; exit 2;; esac
+[[ "${SHELLOPTS:-}" == *xtrace* ]] && { echo 'emit-build-telemetry: refusing to run under xtrace (it would print the Honeycomb key)' >&2; exit 2; }
 set -euo pipefail
 
 : "${HONEYCOMB_BUILD_INGEST_KEY:?HONEYCOMB_BUILD_INGEST_KEY required}"
@@ -107,7 +110,7 @@ jq -nc \
 KEY="$HONEYCOMB_BUILD_INGEST_KEY"
 resp_file="$(mktemp)"
 http="$(curl -sS -o "$resp_file" -w '%{http_code}' "$ENDPOINT" \
-  -H "x-honeycomb-team: $KEY" -H "Content-Type: application/json" \
+  --config <(printf 'header = "x-honeycomb-team: %s"\n' "$KEY") -H "Content-Type: application/json" \
   --data-binary @"$payload_file" || echo 000)"
 rejected="$(jq -r '.partialSuccess.rejectedSpans // 0' "$resp_file" 2>/dev/null || echo unknown)"
 
