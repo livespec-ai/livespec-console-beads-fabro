@@ -284,6 +284,7 @@ check:
         check-global-writes
         check-handoff-dispatch-routing
         check-heading-coverage-debt-register
+        check-hook-template-sandbox-image-path
         check-hook-trees-not-io-exempt
         check-keyword-only-args
         check-local-memory-drift-audit
@@ -1216,3 +1217,6 @@ check-heading-coverage:
 
 check-no-ambient-environment-loops:
     uv run python -m livespec_dev_tooling.checks.no_ambient_environment_loops
+
+check-hook-template-sandbox-image-path:
+    uv run python -m livespec_dev_tooling.checks.hook_template_sandbox_image_path
